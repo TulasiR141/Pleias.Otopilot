@@ -1,0 +1,12 @@
+C:\Users\tulas\Documents\AudiologyChatBot\AudiologyChatBot.Core\bin\Debug\net8.0\AudiologyChatBot.Core.deps.json
+C:\Users\tulas\Documents\AudiologyChatBot\AudiologyChatBot.Core\bin\Debug\net8.0\AudiologyChatBot.Core.dll
+C:\Users\tulas\Documents\AudiologyChatBot\AudiologyChatBot.Core\bin\Debug\net8.0\AudiologyChatBot.Core.pdb
+C:\Users\tulas\Documents\AudiologyChatBot\AudiologyChatBot.Core\obj\Debug\net8.0\AudiologyChatBot.Core.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\tulas\Documents\AudiologyChatBot\AudiologyChatBot.Core\obj\Debug\net8.0\AudiologyChatBot.Core.AssemblyInfoInputs.cache
+C:\Users\tulas\Documents\AudiologyChatBot\AudiologyChatBot.Core\obj\Debug\net8.0\AudiologyChatBot.Core.AssemblyInfo.cs
+C:\Users\tulas\Documents\AudiologyChatBot\AudiologyChatBot.Core\obj\Debug\net8.0\AudiologyChatBot.Core.csproj.CoreCompileInputs.cache
+C:\Users\tulas\Documents\AudiologyChatBot\AudiologyChatBot.Core\obj\Debug\net8.0\AudiologyChatBot.Core.sourcelink.json
+C:\Users\tulas\Documents\AudiologyChatBot\AudiologyChatBot.Core\obj\Debug\net8.0\AudiologyChatBot.Core.dll
+C:\Users\tulas\Documents\AudiologyChatBot\AudiologyChatBot.Core\obj\Debug\net8.0\refint\AudiologyChatBot.Core.dll
+C:\Users\tulas\Documents\AudiologyChatBot\AudiologyChatBot.Core\obj\Debug\net8.0\AudiologyChatBot.Core.pdb
+C:\Users\tulas\Documents\AudiologyChatBot\AudiologyChatBot.Core\obj\Debug\net8.0\ref\AudiologyChatBot.Core.dll

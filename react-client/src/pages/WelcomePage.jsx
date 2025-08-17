@@ -10,8 +10,6 @@ import {
 } from "react-icons/fa";
 import "../styles/App.css";
 
-
-
 const WelcomePage = () => {
   const [patients, setPatients] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -24,12 +22,14 @@ const WelcomePage = () => {
     gender: "",
     phone: "",
     address: "",
+    email: ""
   });
   const navigate = useNavigate();
+
   useEffect(() => {
     const fetchPatients = async () => {
       try {
-        const response = await fetch("http://localhost:5154/api/patient");
+        const response = await fetch(`${import.meta.env.VITE_API_URL}/patient`);
         if (!response.ok) {
           throw new Error("Failed to fetch patient data");
         }
@@ -51,9 +51,10 @@ const WelcomePage = () => {
     patient.address?.toLowerCase().includes(search.toLowerCase())
   );
 
+  // Fixed the handleChange function - was using fullName instead of name
   const handleChange = (e) => {
-    const { fullName, value } = e.target;
-    setFormData((prev) => ({ ...prev, [fullName]: value }));
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSubmit = async (e) => {
@@ -64,10 +65,12 @@ const WelcomePage = () => {
       gender: formData.gender,
       phone: formData.phone,
       address: formData.address,
+      email: formData.email || "no-email@example.com", // Provide default email if empty
+      lastVisit: new Date().toISOString().split('T')[0] // Backend sets current date
     };
 
     try {
-      const res = await fetch("http://localhost:5000/api/patient", {
+      const res = await fetch(`${import.meta.env.VITE_API_URL}/patient`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -79,12 +82,15 @@ const WelcomePage = () => {
       const added = await res.json();
       setPatients((prev) => [...prev, added]);
       alert("Patient added successfully");
+      
+      // Reset form
       setFormData({
         fullName: "",
         age: "",
         gender: "",
         phone: "",
         address: "",
+        email: ""
       });
       setModalOpen(false);
     } catch (err) {
@@ -92,6 +98,8 @@ const WelcomePage = () => {
     }
   };
 
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
 
   return (
     <div className="container">
@@ -111,15 +119,14 @@ const WelcomePage = () => {
         <input
           className="search-box"
           type="text"
-          placeholder="Search patients by name, phone, or email..."
+          placeholder="Search patients by name, phone, or address..."
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />
 
         <div className="cards">
           {filteredPatients.map((patient, index) => (
-            <div className="card" key={index} onClick={() => navigate(`/patient/${patient.id}`)}>
-               
+            <div className="card" key={patient.id || index} onClick={() => navigate(`/patient/${patient.id}`)}>
               <div className="avatar">
                 <FaUser />
               </div>
@@ -144,7 +151,7 @@ const WelcomePage = () => {
                 <FaTimes />
               </button>
             </div>
-            <form className="form" onSubmit={handleSubmit} >
+            <form className="form" onSubmit={handleSubmit}>
               <div className="form-row">
                 <label>
                   Full Name *
@@ -186,15 +193,27 @@ const WelcomePage = () => {
                   Gender
                   <select
                     name="gender"
-                    placeholder="Select gender"
                     value={formData.gender}
                     onChange={handleChange}
                   >
                     <option value="">Select gender</option>
-                    <option value="female">Female</option>
-                    <option value="male">Male</option>
-                    <option value="other">Other</option>
+                    <option value="Female">Female</option>
+                    <option value="Male">Male</option>
+                    <option value="Other">Other</option>
                   </select>
+                </label>
+              </div>
+
+              <div className="form-row">
+                <label>
+                  Email
+                  <input
+                    type="email"
+                    name="email"
+                    placeholder="Enter email address"
+                    value={formData.email}
+                    onChange={handleChange}
+                  />
                 </label>
               </div>
 

@@ -1,0 +1,23 @@
+{
+  "runtimeTarget": {
+    "name": ".NETCoreApp,Version=v8.0",
+    "signature": ""
+  },
+  "compilationOptions": {},
+  "targets": {
+    ".NETCoreApp,Version=v8.0": {
+      "AudiologyChatBot.Core/1.0.0": {
+        "runtime": {
+          "AudiologyChatBot.Core.dll": {}
+        }
+      }
+    }
+  },
+  "libraries": {
+    "AudiologyChatBot.Core/1.0.0": {
+      "type": "project",
+      "serviceable": false,
+      "sha512": ""
+    }
+  }
+}

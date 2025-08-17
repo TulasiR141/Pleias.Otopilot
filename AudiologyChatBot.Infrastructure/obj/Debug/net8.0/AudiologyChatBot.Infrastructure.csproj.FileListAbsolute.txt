@@ -1,0 +1,16 @@
+C:\Users\tulas\Documents\AudiologyChatBot\AudiologyChatBot.Infrastructure\bin\Debug\net8.0\AudiologyChatBot.Infrastructure.deps.json
+C:\Users\tulas\Documents\AudiologyChatBot\AudiologyChatBot.Infrastructure\bin\Debug\net8.0\AudiologyChatBot.Infrastructure.dll
+C:\Users\tulas\Documents\AudiologyChatBot\AudiologyChatBot.Infrastructure\bin\Debug\net8.0\AudiologyChatBot.Infrastructure.pdb
+C:\Users\tulas\Documents\AudiologyChatBot\AudiologyChatBot.Infrastructure\bin\Debug\net8.0\AudiologyChatBot.Core.dll
+C:\Users\tulas\Documents\AudiologyChatBot\AudiologyChatBot.Infrastructure\bin\Debug\net8.0\AudiologyChatBot.Core.pdb
+C:\Users\tulas\Documents\AudiologyChatBot\AudiologyChatBot.Infrastructure\obj\Debug\net8.0\AudiologyChatBot.Infrastructure.csproj.AssemblyReference.cache
+C:\Users\tulas\Documents\AudiologyChatBot\AudiologyChatBot.Infrastructure\obj\Debug\net8.0\AudiologyChatBot.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\tulas\Documents\AudiologyChatBot\AudiologyChatBot.Infrastructure\obj\Debug\net8.0\AudiologyChatBot.Infrastructure.AssemblyInfoInputs.cache
+C:\Users\tulas\Documents\AudiologyChatBot\AudiologyChatBot.Infrastructure\obj\Debug\net8.0\AudiologyChatBot.Infrastructure.AssemblyInfo.cs
+C:\Users\tulas\Documents\AudiologyChatBot\AudiologyChatBot.Infrastructure\obj\Debug\net8.0\AudiologyChatBot.Infrastructure.csproj.CoreCompileInputs.cache
+C:\Users\tulas\Documents\AudiologyChatBot\AudiologyChatBot.Infrastructure\obj\Debug\net8.0\AudiologyChatBot.Infrastructure.sourcelink.json
+C:\Users\tulas\Documents\AudiologyChatBot\AudiologyChatBot.Infrastructure\obj\Debug\net8.0\Audiolog.E711C7DD.Up2Date
+C:\Users\tulas\Documents\AudiologyChatBot\AudiologyChatBot.Infrastructure\obj\Debug\net8.0\AudiologyChatBot.Infrastructure.dll
+C:\Users\tulas\Documents\AudiologyChatBot\AudiologyChatBot.Infrastructure\obj\Debug\net8.0\refint\AudiologyChatBot.Infrastructure.dll
+C:\Users\tulas\Documents\AudiologyChatBot\AudiologyChatBot.Infrastructure\obj\Debug\net8.0\AudiologyChatBot.Infrastructure.pdb
+C:\Users\tulas\Documents\AudiologyChatBot\AudiologyChatBot.Infrastructure\obj\Debug\net8.0\ref\AudiologyChatBot.Infrastructure.dll

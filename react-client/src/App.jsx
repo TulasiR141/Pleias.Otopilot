@@ -1,18 +1,16 @@
+﻿import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import WelcomePage from './pages/WelcomePage';
-import NewUserForm from './pages/NewUserForm';
 import PatientHomePage from "./pages/PatientHomePage";
-import ChatPage from './pages/ChatPage';
+import PatientProfile from "./pages/PatientProfile";
 
 function App() {
   return (
     <Router>
       <Routes>
         <Route path="/" element={<WelcomePage />} />
-        <Route path="/new-user" element={<NewUserForm />} />
-        <Route path="/chat" element={<ChatPage />} />
-        {/* <Route path="/patient/:id" element={<PatientHomePage />} /> */}
         <Route path="/patient/:patientId" element={<PatientHomePage />} />
+        <Route path="/patient/:patientId/profile" element={<PatientProfile />} />
       </Routes>
     </Router>
   );
