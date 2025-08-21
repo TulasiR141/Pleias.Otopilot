@@ -1,0 +1,31 @@
+﻿{
+  "defaultStatus": "In Progress",
+  "completedStatus": "Completed",
+  "templates": {
+    "urgent": {
+      "recommendation": "URGENT: Immediate medical evaluation required. Do not proceed with hearing aid fitting until medical clearance is obtained.",
+      "nextSteps": "1. URGENT medical referral (within 24-48 hours)\n2. Postpone hearing aid evaluation until medical clearance\n3. Document all findings for medical provider\n4. Follow up after medical treatment",
+      "keyFinding": "URGENT ACTION REQUIRED - Immediate medical attention needed"
+    },
+    "ent_referral": {
+      "recommendation": "Medical referral recommended. Schedule ENT consultation before proceeding with hearing aid evaluation.",
+      "nextSteps": "1. Schedule ENT consultation\n2. Obtain medical clearance\n3. Request detailed medical report\n4. Return for hearing aid evaluation after clearance",
+      "keyFinding": "Medical referral recommended based on responses"
+    },
+    "contraindication": {
+      "recommendation": "CONTRAINDICATION IDENTIFIED: Traditional hearing aids are not suitable. Specialized consultation required.",
+      "nextSteps": "1. Do not proceed with traditional hearing aid fitting\n2. Explore alternative communication solutions\n3. Consider specialized consultation\n4. Document contraindication reasons",
+      "keyFinding": "Contraindications identified - Special considerations needed"
+    },
+    "cochlear_implant": {
+      "recommendation": "COCHLEAR IMPLANT DETECTED: Patient has existing cochlear implant. Traditional hearing aid fitting contraindicated.",
+      "nextSteps": "1. Refer to cochlear implant audiologist for programming/maintenance\n2. Consider contralateral hearing aid only if appropriate\n3. Provide cochlear implant-specific resources\n4. Document existing implant details",
+      "keyFinding": "Cochlear implant detected - Traditional hearing aids contraindicated"
+    },
+    "normal": {
+      "recommendation": "Assessment completed successfully. Ready to proceed with comprehensive hearing aid evaluation.",
+      "nextSteps": "1. Schedule comprehensive audiometric testing\n2. Discuss hearing aid options and technology levels\n3. Begin hearing aid fitting process\n4. Plan follow-up appointments",
+      "keyFinding": "Assessment completed successfully - Ready for next phase"
+    }
+  }
+}

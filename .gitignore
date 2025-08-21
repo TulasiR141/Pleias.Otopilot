@@ -1,0 +1,28 @@
+# --- .NET ---
+bin/
+obj/
+.vs/
+*.user
+*.suo
+publish/
+**/publish/
+
+# --- React / Node ---
+node_modules/
+dist/
+build/
+react-client/node_modules/
+react-client/dist/
+react-client/build/
+
+# --- Deploy artifacts ---
+*.zip
+*.log
+
+# --- Local config ---
+appsettings.Development.json
+.env
+
+# --- IDE ---
+.vscode/
+.azure/
