@@ -87,7 +87,7 @@ const Chatbot = () => {
         const message = userMessage.toLowerCase();
 
         try {
-            const res = await fetch("http://57.128.85.149:5001/chat", {
+            const res = await fetch("https://57.128.85.149:5001/chat", {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
