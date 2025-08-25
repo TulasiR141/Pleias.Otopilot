@@ -694,12 +694,12 @@ const CommentaryPanel = () => {
                                         {/* Main Question Area */}
                                         <div className="question-main">
                                             <div className="question-header">
-                                                <div className="progress-bar">
-                                                    <div 
-                                                        className="progress-fill" 
-                                                        style={{width: `${(questionHistory.length / 20) * 100}%`}}
-                                                    ></div>
-                                                </div>
+                                                {/*<div className="progress-bar">*/}
+                                                {/*    <div */}
+                                                {/*        className="progress-fill" */}
+                                                {/*        style={{width: `${(questionHistory.length / 20) * 100}%`}}*/}
+                                                {/*    ></div>*/}
+                                                {/*</div>*/}
                                                 <p className="question-counter">Question {questionHistory.length + 1}</p>
                                                 <p className="current-module">Module: {currentQuestion.module || 'General'}</p>
                                             </div>
