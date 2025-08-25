@@ -1,0 +1,26 @@
+trigger:
+- main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  # Get this token from your Static Web App in Azure Portal
+  # Go to: Static Web App → Manage deployment token
+  azure_static_web_apps_api_token: '6f51353915f60bb42587627be9fd6a0de3e61cfe09a8e43ded8a9f4cec9f370602-b79d8344-426a-4d6d-b770-30adce244efb01019270e3550410'
+
+steps:
+- checkout: self
+  submodules: true
+  
+- task: NodeTool@0
+  inputs:
+    versionSpec: '18.x'
+  displayName: 'Install Node.js'
+
+- task: AzureStaticWebApp@0
+  inputs:
+    app_location: '/react-client'          # Your React app folder
+    api_location: ''                       # Leave empty if no API
+    output_location: 'build'               # React build output
+    azure_static_web_apps_api_token: $(azure_static_web_apps_api_token)
