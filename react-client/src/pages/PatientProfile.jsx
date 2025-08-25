@@ -6,7 +6,7 @@ import { FaUser, FaSave, FaArrowLeft, FaEdit, FaUserCircle } from "react-icons/f
 const PatientProfile = () => {
     const { patientId } = useParams();
     const navigate = useNavigate();
-    
+
     const [patient, setPatient] = useState({
         id: 0,
         fullName: "",
@@ -17,7 +17,7 @@ const PatientProfile = () => {
         email: "",
         lastVisit: ""
     });
-    
+
     const [loading, setLoading] = useState(true);
     const [saving, setSaving] = useState(false);
     const [error, setError] = useState(null);
@@ -32,14 +32,14 @@ const PatientProfile = () => {
         try {
             setLoading(true);
             const response = await fetch(`${import.meta.env.VITE_API_URL}/patient/${patientId}`);
-            
+
             if (!response.ok) {
                 if (response.status === 404) {
                     throw new Error("Patient not found");
                 }
                 throw new Error("Failed to fetch patient details");
             }
-            
+
             const data = await response.json();
             setPatient(data);
             setOriginalPatient(data);
@@ -140,29 +140,9 @@ const PatientProfile = () => {
                 <div className="header-content">
                     <h1>Profile Details</h1>
                 </div>
-                {!isEditing && (
-                    <button onClick={() => setIsEditing(true)} className="edit-btn">
-                        <FaEdit /> Edit Profile
-                    </button>
-                )}
-                {isEditing && (
-                    <div className="action-buttons">
-                        <button 
-                            onClick={handleSave} 
-                            disabled={saving}
-                            className="save-btn"
-                        >
-                            <FaSave /> {saving ? "Saving..." : "Save Changes"}
-                        </button>
-                        <button 
-                            onClick={handleCancel} 
-                            disabled={saving}
-                            className="cancel-btn"
-                        >
-                            Cancel
-                        </button>
-                    </div>
-                )}
+                <button onClick={handleBack} className="back-btn-header">
+                    <FaArrowLeft /> Back
+                </button>
             </div>
 
             {error && (
@@ -178,7 +158,7 @@ const PatientProfile = () => {
                     </div>
                     <h2>{patient.fullName}</h2>
                     <p className="age">Age {patient.age}</p>
-                    
+
                     <div className="profile-info">
                         <div className="info-row">
                             <span className="info-label">Patient ID:</span>
@@ -188,6 +168,32 @@ const PatientProfile = () => {
                             <span className="info-label">Last Visit:</span>
                             <span className="info-value">{patient.lastVisit || "Not recorded"}</span>
                         </div>
+                    </div>
+
+                    {/* Action buttons in sidebar - only Edit button */}
+                    <div className="sidebar-actions">
+                        {!isEditing ? (
+                            <button onClick={() => setIsEditing(true)} className="edit-btn">
+                                <FaEdit /> Edit Profile
+                            </button>
+                        ) : (
+                            <div className="edit-actions">
+                                <button
+                                    onClick={handleSave}
+                                    disabled={saving}
+                                    className="save-btn"
+                                >
+                                    <FaSave /> {saving ? "Saving..." : "Save Changes"}
+                                </button>
+                                <button
+                                    onClick={handleCancel}
+                                    disabled={saving}
+                                    className="cancel-btn"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        )}
                     </div>
                 </div>
 
@@ -314,14 +320,6 @@ const PatientProfile = () => {
                             )}
                         </div>
                     </div>
-
-                    {!isEditing && (
-                        <div className="action-buttons">
-                            <button onClick={handleBack} className="back-btn">
-                                <FaArrowLeft /> Back to Patient Home
-                            </button>
-                        </div>
-                    )}
                 </div>
             </div>
         </div>
