@@ -5,8 +5,6 @@ pool:
   vmImage: 'ubuntu-latest'
 
 variables:
-  # Get this token from your Static Web App in Azure Portal
-  # Go to: Static Web App → Manage deployment token
   azure_static_web_apps_api_token: '6f51353915f60bb42587627be9fd6a0de3e61cfe09a8e43ded8a9f4cec9f370602-b79d8344-426a-4d6d-b770-30adce244efb01019270e3550410'
 
 steps:
@@ -18,9 +16,17 @@ steps:
     versionSpec: '18.x'
   displayName: 'Install Node.js'
 
+# Only build the React frontend
+- script: |
+    cd react-client
+    npm install
+    npm run build
+  displayName: 'Build React App'
+
 - task: AzureStaticWebApp@0
   inputs:
-    app_location: '/react-client'          # Your React app folder
-    api_location: ''                       # Leave empty if no API
+    app_location: 'react-client'           # React app source
+    api_location: ''                       # No API for Static Web App
     output_location: 'build'               # React build output
+    skip_app_build: true                   # We already built it above
     azure_static_web_apps_api_token: $(azure_static_web_apps_api_token)
