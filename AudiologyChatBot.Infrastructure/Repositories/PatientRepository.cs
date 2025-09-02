@@ -24,7 +24,7 @@ namespace AudiologyChatBot.Infrastructure.Repositories
             
             var query = @"
                 SELECT  Id, FullName, Gender, Age, Address, Phone, Email, LastVisit 
-                FROM Patients";
+                FROM Patient";
             
             using var command = new SqlCommand(query, connection);
             using var reader = await command.ExecuteReaderAsync();
@@ -54,7 +54,7 @@ namespace AudiologyChatBot.Infrastructure.Repositories
             
             var query = @"
                 SELECT Id, FullName, Gender, Age, Address, Phone, Email, LastVisit 
-                FROM Patients 
+                FROM Patient 
                 WHERE Id = @Id";
             
             using var command = new SqlCommand(query, connection);
@@ -86,7 +86,7 @@ namespace AudiologyChatBot.Infrastructure.Repositories
             await connection.OpenAsync();
             
             var query = @"
-                INSERT INTO Patients (FullName, Gender, Age, Address, Phone, Email, LastVisit)
+                INSERT INTO Patient (FullName, Gender, Age, Address, Phone, Email, LastVisit)
                 VALUES (@FullName, @Gender, @Age, @Address, @Phone, @Email, @LastVisit);
                 SELECT CAST(SCOPE_IDENTITY() as int);";
             
@@ -109,7 +109,7 @@ namespace AudiologyChatBot.Infrastructure.Repositories
             await connection.OpenAsync();
             
             var query = @"
-                UPDATE Patients 
+                UPDATE Patient 
                 SET FullName = @FullName, Gender = @Gender, Age = @Age, 
                     Address = @Address, Phone = @Phone, Email = @Email, LastVisit = @LastVisit
                 WHERE Id = @Id";
@@ -133,7 +133,7 @@ namespace AudiologyChatBot.Infrastructure.Repositories
             using var connection = new SqlConnection(_connectionString);
             await connection.OpenAsync();
             
-            var query = "DELETE FROM Patients WHERE Id = @Id";
+            var query = "DELETE FROM Patient WHERE Id = @Id";
             
             using var command = new SqlCommand(query, connection);
             command.Parameters.AddWithValue("@Id", id);
