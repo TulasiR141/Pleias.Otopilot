@@ -244,26 +244,37 @@
 }
 
 /* Back button in header (top right) */
+
 .back-btn-header {
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 10px 20px;
-    background-color: #f3f4f6;
+    padding: 10px 16px;
+    background-color: #e5e7eb;
     color: #374151;
-    border: 2px solid #d1d5db;
-    border-radius: 8px;
-    cursor: pointer;
+    border: none;
+    border-radius: 6px;
     font-size: 14px;
-    font-weight: 600;
-    transition: all 0.2s;
-    text-decoration: none;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    white-space: nowrap;
+    height: fit-content;
 }
 
     .back-btn-header:hover {
-        background-color: #e5e7eb;
-        border-color: #9ca3af;
+        background-color: #d1d5db;
         transform: translateY(-1px);
+        box-shadow: 0 4px 8px rgba(209, 213, 219, 0.5);
+    }
+
+    .back-btn-header:active {
+        transform: translateY(0);
+        box-shadow: 0 2px 4px rgba(209, 213, 219, 0.4);
+    }
+
+    .back-btn-header svg {
+        font-size: 12px;
     }
 
 /* Updated button styles for sidebar placement */
