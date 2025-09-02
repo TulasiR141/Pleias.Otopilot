@@ -2,6 +2,7 @@ using AudiologyChatBot.Core.Interfaces;
 using AudiologyChatBot.Core.Models;
 using AudiologyChatBot.Infrastructure.Services;
 using AudiologyChatBot.Infrastructure.Repositories;
+using Microsoft.AspNetCore.Http.Features;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -13,6 +14,7 @@ builder.Services.AddScoped<IPatientRepository, PatientRepository>();
 
 // NEW: Register AssessmentRepository and DatabaseSettings
 builder.Services.AddScoped<IAssessmentRepository, AssessmentRepository>();
+builder.Services.AddScoped<IDataImportRepository, DataImportRepository>();
 builder.Services.Configure<DatabaseSettings>(options =>
 {
     options.ConnectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? "";
@@ -36,6 +38,8 @@ builder.Services.AddScoped<IDecisionTreeService>(provider =>
 // AssessmentService now depends on IDecisionTreeService AND IAssessmentRepository
 builder.Services.AddScoped<IAssessmentService, AssessmentService>();
 
+builder.Services.AddScoped<IDataImportService, DataImportService>();
+
 // FirstAppointment services
 builder.Services.AddScoped<IFirstAppointmentRepository, FirstAppointmentRepository>();
 builder.Services.AddScoped<IFirstAppointmentService, FirstAppointmentService>();
@@ -53,7 +57,16 @@ builder.Services.AddCors(options =>
               .AllowCredentials();
     });
 });
-
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.MultipartBodyLengthLimit = 52428800; // 50MB
+});
+builder.Services.Configure<FormOptions>(options =>
+{
+    options.ValueLengthLimit = int.MaxValue;
+    options.MultipartBodyLengthLimit = int.MaxValue;
+    options.MultipartHeadersLengthLimit = int.MaxValue;
+});
 // Add Swagger/OpenAPI for development
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
