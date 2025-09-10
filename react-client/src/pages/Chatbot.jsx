@@ -8,7 +8,7 @@ const Chatbot = () => {
     const [messages, setMessages] = useState([
         {
             id: 1,
-            text: "Hello! I'm here to help you with any questions about your healthcare journey. How can I assist you today?",
+            text: "Hi, I am OtoPilotAI. I am here to help to answer your questions on general audiology and administrative matters as well as hearing aids specifications. My knowledge is based on a curated corpus, and I only respond within it. How can I assist you today?",
             sender: 'bot',
             timestamp: new Date()
         }
