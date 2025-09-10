@@ -20,8 +20,9 @@ namespace AudiologyChatBot.Core.Interfaces
         Task<bool> UpdateAnswerAsync(AssessmentAnswerData answer);
 
         // Bulk operations for performance
-        Task<bool> SaveMultipleAnswersAsync(List<AssessmentAnswerData> answers);
+        //Task<bool> SaveMultipleAnswersAsync(List<AssessmentAnswerData> answers);
         Task<bool> DeleteAssessmentAnswersAsync(int assessmentId);
+        Task<bool> DeleteAnswerAsync(int patientId, string questionId);
     }
 
     public interface IAssessmentConfigurationService

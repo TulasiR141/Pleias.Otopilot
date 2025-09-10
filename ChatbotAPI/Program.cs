@@ -31,12 +31,13 @@ builder.Services.AddScoped<IPatientService, PatientService>();
 builder.Services.AddScoped<IDecisionTreeService>(provider =>
 {
     var env = provider.GetRequiredService<IWebHostEnvironment>();
-    var filePath = Path.Combine(env.ContentRootPath, "data", "decisionTree.json");
+    var filePath = Path.Combine(env.ContentRootPath, "data", "decision_tree_modules_updated_v6.json");
     return new DecisionTreeService(filePath);
 });
 
 // AssessmentService now depends on IDecisionTreeService AND IAssessmentRepository
 builder.Services.AddScoped<IAssessmentService, AssessmentService>();
+builder.Services.AddScoped<IHearingAidFilterRepository, HearingAidFilterRepository>();
 
 builder.Services.AddScoped<IDataImportService, DataImportService>();
 
