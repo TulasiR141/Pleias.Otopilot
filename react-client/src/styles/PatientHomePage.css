@@ -1246,3 +1246,242 @@
         transition-duration: 0.01ms !important;
     }
 }
+/* Hearing Aid Recommendations Scrollable Grid Styles */
+
+.recommendations-container {
+    width: 100%;
+    height: 100%;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+.hearing-aids-scrollable-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 20px;
+    max-height: calc(100vh - 200px); /* Adjust based on your header height */
+    overflow-y: auto;
+    overflow-x: auto;
+    padding: 10px;
+    border-radius: 8px;
+    background-color: #f5f7fa;
+}
+
+.hearing-aid-grid-card {
+    background: white;
+    border: 1px solid #e1e8ed;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    min-width: 320px;
+    height: fit-content;
+}
+
+    .hearing-aid-grid-card:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        border-color: #d1d9e0;
+    }
+
+.hearing-aid-grid-header {
+    border-bottom: 1px solid #e1e8ed;
+    padding-bottom: 15px;
+    margin-bottom: 15px;
+}
+
+    .hearing-aid-grid-header h6 {
+        font-size: 16px;
+        font-weight: 600;
+        color: #1a202c;
+        margin: 0 0 6px 0;
+        line-height: 1.3;
+    }
+
+    .hearing-aid-grid-header .model-name {
+        font-size: 15px;
+        font-weight: 500;
+        color: #4299e1;
+        margin: 0 0 8px 0;
+        display: block;
+    }
+
+    .hearing-aid-grid-header .product-line {
+        display: inline-block;
+        background: #ebf8ff;
+        color: #2b6cb0;
+        padding: 3px 10px;
+        border-radius: 12px;
+        font-size: 11px;
+        font-weight: 500;
+        text-transform: uppercase;
+        letter-spacing: 0.3px;
+        border: 1px solid #bee3f8;
+    }
+
+.hearing-aid-grid-details {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.grid-detail-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    padding: 6px 0;
+    border-bottom: 1px solid #f7fafc;
+}
+
+    .grid-detail-row:last-child {
+        border-bottom: none;
+    }
+
+.grid-label {
+    font-weight: 500;
+    color: #4a5568;
+    font-size: 13px;
+    min-width: 100px;
+    flex-shrink: 0;
+}
+
+.grid-value {
+    color: #2d3748;
+    font-size: 13px;
+    text-align: right;
+    flex: 1;
+    margin-left: 10px;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+}
+
+/* Description specific styling */
+.description-row {
+    flex-direction: column;
+    align-items: flex-start;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 12px;
+}
+
+.description-value {
+    text-align: left;
+    margin-left: 0;
+    margin-top: 6px;
+    width: 100%;
+}
+
+.description-text {
+    font-size: 13px;
+    line-height: 1.4;
+    color: #4a5568;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.expand-btn {
+    background: none;
+    border: none;
+    color: #4299e1;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 0;
+    text-decoration: none;
+    transition: color 0.2s ease;
+    border-radius: 2px;
+}
+
+    .expand-btn:hover {
+        color: #2b6cb0;
+        text-decoration: underline;
+    }
+
+    .expand-btn:focus {
+        outline: 2px solid #4299e1;
+        outline-offset: 2px;
+        border-radius: 2px;
+    }
+
+/* Responsive design */
+@media (max-width: 1200px) {
+    .hearing-aids-scrollable-grid {
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 15px;
+    }
+
+    .hearing-aid-grid-card {
+        min-width: 280px;
+        padding: 15px;
+    }
+}
+
+@media (max-width: 768px) {
+    .hearing-aids-scrollable-grid {
+        grid-template-columns: 1fr;
+        gap: 15px;
+        max-height: calc(100vh - 150px);
+        padding: 5px;
+    }
+
+    .hearing-aid-grid-card {
+        min-width: unset;
+        padding: 15px;
+    }
+
+    .grid-detail-row {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 4px;
+    }
+
+    .grid-value {
+        text-align: left;
+        margin-left: 0;
+    }
+}
+
+/* Custom scrollbar for the grid */
+.hearing-aids-scrollable-grid::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.hearing-aids-scrollable-grid::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 3px;
+}
+
+.hearing-aids-scrollable-grid::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 3px;
+}
+
+    .hearing-aids-scrollable-grid::-webkit-scrollbar-thumb:hover {
+        background: #a0aec0;
+    }
+
+/* No recommendations styling */
+.no-recommendations {
+    text-align: center;
+    padding: 40px 20px;
+    color: #4a5568;
+    background: white;
+    border-radius: 8px;
+    border: 1px solid #e2e8f0;
+}
+
+    .no-recommendations p {
+        margin: 0 0 10px 0;
+        font-size: 15px;
+        line-height: 1.5;
+    }
+
+/* Loading container */
+.loading-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 200px;
+    font-size: 15px;
+    color: #4a5568;
+}

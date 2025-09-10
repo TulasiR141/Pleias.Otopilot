@@ -9,30 +9,34 @@ const PatientHomePage = () => {
     const [patient, setPatient] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    
+
     // State for active tab
     const [activeTab, setActiveTab] = useState("Patient Journey");
-    
+
     // State for assessment data
     const [assessmentData, setAssessmentData] = useState(null);
     const [assessmentLoading, setAssessmentLoading] = useState(false);
-    
+
     // State for First Appointment
     const [firstAppointment, setFirstAppointment] = useState(null);
     const [appointmentLoading, setAppointmentLoading] = useState(false);
     const [showPreAppointmentForm, setShowPreAppointmentForm] = useState(false);
     const [preAppointmentComments, setPreAppointmentComments] = useState("");
     const [appointmentDate, setAppointmentDate] = useState("");
-    
-    // State for dynamic questionnaire (simplified)
+
+    // State for dynamic questionnaire
     const [currentQuestion, setCurrentQuestion] = useState(null);
     const [questionHistory, setQuestionHistory] = useState([]);
     const [currentNodeId, setCurrentNodeId] = useState(null);
     const [assessmentStarted, setAssessmentStarted] = useState(false);
 
-    // Commentary-related state - simplified
+    // Commentary-related state
     const [savedCommentaries, setSavedCommentaries] = useState({});
     const [commentaryHistory, setCommentaryHistory] = useState([]);
+
+    // State for hearing aid recommendations
+    const [hearingAidRecommendations, setHearingAidRecommendations] = useState(null);
+    const [recommendationsLoading, setRecommendationsLoading] = useState(false);
 
     const { patientId } = useParams();
     const navigate = useNavigate();
@@ -57,17 +61,17 @@ const PatientHomePage = () => {
 
             try {
                 const response = await fetch(`${import.meta.env.VITE_API_URL}/patient/${patientId}`);
-                
+
                 if (!response.ok) {
                     if (response.status === 404) {
                         throw new Error("Patient not found.");
                     }
                     throw new Error("Failed to fetch patient data");
                 }
-                
+
                 const data = await response.json();
                 setPatient(data);
-                
+
                 await fetchAssessmentData(patientId);
                 await fetchFirstAppointmentData(patientId);
             } catch (err) {
@@ -85,7 +89,7 @@ const PatientHomePage = () => {
         try {
             setAppointmentLoading(true);
             const response = await fetch(`${import.meta.env.VITE_API_URL}/FirstAppointment/patient/${patientId}`);
-            
+
             if (response.ok) {
                 const appointmentData = await response.json();
                 setFirstAppointment(appointmentData);
@@ -106,8 +110,8 @@ const PatientHomePage = () => {
     const handleCreateFirstAppointment = async () => {
         try {
             setAppointmentLoading(true);
-            
-            const appointmentDateTime = appointmentDate 
+
+            const appointmentDateTime = appointmentDate
                 ? new Date(appointmentDate).toISOString()
                 : new Date().toISOString();
 
@@ -146,7 +150,7 @@ const PatientHomePage = () => {
     const handleStartAppointment = async () => {
         try {
             setAppointmentLoading(true);
-            
+
             const response = await fetch(`${import.meta.env.VITE_API_URL}/FirstAppointment/${firstAppointment.id}/start`, {
                 method: 'POST',
                 headers: {
@@ -174,15 +178,44 @@ const PatientHomePage = () => {
         }
     };
 
-    // Function to fetch assessment data (simplified - check if completed)
+    // Function to fetch hearing aid recommendations
+    const fetchHearingAidRecommendations = async (patientId) => {
+        try {
+            setRecommendationsLoading(true);
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/patient/${patientId}/assessment/recommendations`);
+
+            if (response.ok) {
+                const recommendationsData = await response.json();
+                setHearingAidRecommendations(recommendationsData);
+                console.log('Hearing aid recommendations fetched:', recommendationsData);
+            } else if (response.status === 404) {
+                setHearingAidRecommendations(null);
+                console.log('No hearing aid recommendations found for this patient');
+            } else {
+                console.error("Failed to fetch hearing aid recommendations");
+            }
+        } catch (err) {
+            console.error("Error fetching hearing aid recommendations:", err);
+            setHearingAidRecommendations(null);
+        } finally {
+            setRecommendationsLoading(false);
+        }
+    };
+
+    // Function to fetch assessment data with recommendations
     const fetchAssessmentData = async (patientId) => {
         try {
             setAssessmentLoading(true);
             const response = await fetch(`${import.meta.env.VITE_API_URL}/patient/${patientId}/assessment`);
-            
+
             if (response.ok) {
                 const assessmentData = await response.json();
                 setAssessmentData(assessmentData);
+
+                // If assessment is completed, also fetch hearing aid recommendations
+                if (assessmentData.status === 'Completed') {
+                    await fetchHearingAidRecommendations(patientId);
+                }
             } else if (response.status === 404) {
                 setAssessmentData(null);
             } else {
@@ -196,7 +229,7 @@ const PatientHomePage = () => {
         }
     };
 
-    // Function to start assessment (simplified)
+    // Function to start assessment
     const handleStartAssessment = async () => {
         try {
             setAssessmentLoading(true);
@@ -210,7 +243,7 @@ const PatientHomePage = () => {
         }
     };
 
-    // Function to fetch next question from decision tree
+    // UPDATED: Function to fetch next question with automatic node type handling
     const fetchNextQuestion = async (nodeId) => {
         try {
             setAssessmentLoading(true);
@@ -223,18 +256,42 @@ const PatientHomePage = () => {
 
             if (response.ok) {
                 const questionData = await response.json();
-                
-                if (questionData.isEndNode) {
-                    setCurrentQuestion({
-                        ...questionData,
-                        isEndNode: true,
-                        selectedAnswer: null
-                    });
-                } else {
-                    setCurrentQuestion(questionData);
+                console.log(`Processing node ${nodeId} of type: ${questionData.nodeType}`);
+
+                // Handle different node types
+                switch (questionData.nodeType) {
+                    case 'root':
+                        // Root node: skip directly to next without UI or saving
+                        if (questionData.next) {
+                            console.log(`Root node ${nodeId}, proceeding to: ${questionData.next}`);
+                            await fetchNextQuestion(questionData.next);
+                        } else {
+                            console.error("Root node has no next node");
+                            alert("Assessment configuration error. Please contact support.");
+                        }
+                        break;
+
+                    case 'flag':
+                        // Flag/Action node: auto-save and proceed to next
+                        await handleFlagNode(nodeId, questionData);
+                        break;
+
+                    case 'question':
+                        // Question node: display in UI
+                        setCurrentQuestion(questionData);
+                        setCurrentNodeId(nodeId);
+                        break;
+
+                    case 'terminal':
+                        await handleFlagNode(nodeId, questionData);
+                        break;
+
+                    default:
+                        console.warn(`Unknown node type: ${questionData.nodeType}`);
+                        setCurrentQuestion(questionData);
+                        setCurrentNodeId(nodeId);
+                        break;
                 }
-                
-                setCurrentNodeId(nodeId);
             } else {
                 console.error("Failed to fetch question");
                 alert("Failed to load question. Please try again.");
@@ -247,26 +304,124 @@ const PatientHomePage = () => {
         }
     };
 
-    // UPDATED: Function to handle answer submission with auto-save commentary
-    const handleAnswerSubmit = async (selectedOption) => {
+    // FIXED: Function to extract database filters from decision tree node
+    const extractDatabaseFilters = (questionNode) => {
+        if (!questionNode) {
+            return null;
+        }
+
         try {
-            setAssessmentLoading(true);
-            
-            // Get commentary from textarea when submitting answer
-            const textarea = document.querySelector('.commentary-textarea');
-            const commentaryText = textarea ? textarea.value.trim() : '';
-            
+            // Check for database_filters property (this matches your JSON structure)
+            let filters = null;
+
+            if (questionNode.database_filters?.filters) {
+                filters = questionNode.database_filters.filters;
+            }
+
+            if (!filters || filters.length === 0) {
+                return null;
+            }
+
+            // Log for debugging
+            console.log('Extracting database filters from node:', questionNode.nodeId || currentNodeId);
+            console.log('Filters found:', filters);
+
+            return filters;
+        } catch (error) {
+            console.error('Error extracting database filters:', error);
+            return null;
+        }
+    };
+
+    // FIXED: Function to handle flag/action nodes automatically
+    const handleFlagNode = async (nodeId, questionData) => {
+        try {
+            console.log(`Auto-processing flag node: ${nodeId}`);
+
+            // Extract database filters if present
+            const databaseFilters = extractDatabaseFilters(questionData);
+
+            // Auto-save the flag node using the existing answer endpoint
             const response = await fetch(`${import.meta.env.VITE_API_URL}/patient/${patientId}/assessment/answer`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    patientId: patientId,
+                    patientId: parseInt(patientId),
+                    questionId: nodeId,
+                    answer: "Auto-processed flag node",
+                    questionText: questionData.description || questionData.action || "Flag/Action node",
+                    commentary: null,
+                    databaseFilters: databaseFilters,
+                    nodeType: "flag"
+                })
+            });
+
+            if (response.ok) {
+                console.log(`Flag node ${nodeId} auto-saved successfully`);
+
+                // Add to question history for tracking
+                setQuestionHistory(prev => [...prev, {
+                    nodeId: nodeId,
+                    question: questionData.description || "Auto-processed flag node",
+                    answer: "Auto-processed flag node",
+                    questionData: questionData,
+                    commentary: null,
+                    databaseFilters: databaseFilters,
+                    isAutoSaved: true,
+                    nodeType: "flag"
+                }]);
+
+                // Proceed to next node if available
+                if (questionData.next) {
+                    await fetchNextQuestion(questionData.next);
+                } else {
+                    // Flag node with no next - treat as terminal
+                    setCurrentQuestion({
+                        ...questionData,
+                        isEndNode: true,
+                        selectedAnswer: null,
+                        endReason: "Flag node processed - end of assessment path"
+                    });
+                    setCurrentNodeId(nodeId);
+                }
+            } else {
+                const errorText = await response.text();
+                console.error("Failed to auto-save flag node:", errorText);
+                alert("Error processing assessment step. Please try again.");
+            }
+        } catch (err) {
+            console.error("Error handling flag node:", err);
+            alert("Error processing assessment step. Please try again.");
+        }
+    };
+
+    // FIXED: Function to handle answer submission for question nodes
+    const handleAnswerSubmit = async (selectedOption) => {
+        try {
+            setAssessmentLoading(true);
+
+            // Get commentary from textarea when submitting answer
+            const textarea = document.querySelector('.commentary-textarea');
+            const commentaryText = textarea ? textarea.value.trim() : '';
+
+            // Extract database filters from current question node
+            const databaseFilters = extractDatabaseFilters(currentQuestion);
+
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/patient/${patientId}/assessment/answer`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    patientId: parseInt(patientId),
                     questionId: currentNodeId,
                     answer: selectedOption,
                     questionText: currentQuestion.question,
-                    commentary: commentaryText || null // AUTO-SAVE: Include commentary with answer
+                    commentary: commentaryText || null,
+                    databaseFilters: databaseFilters,
+                    nodeType: currentQuestion.nodeType || "question"
                 })
             });
 
@@ -277,7 +432,7 @@ const PatientHomePage = () => {
                         ...prev,
                         [currentNodeId]: commentaryText
                     }));
-                    
+
                     setCommentaryHistory(prev => [...prev, {
                         nodeId: currentNodeId,
                         question: currentQuestion.question,
@@ -291,7 +446,9 @@ const PatientHomePage = () => {
                     question: currentQuestion.question,
                     answer: selectedOption,
                     questionData: currentQuestion,
-                    commentary: commentaryText || null
+                    commentary: commentaryText || null,
+                    databaseFilters: databaseFilters,
+                    nodeType: "question"
                 }]);
 
                 if (currentQuestion.conditions && currentQuestion.conditions[selectedOption]) {
@@ -306,6 +463,8 @@ const PatientHomePage = () => {
                     });
                 }
             } else {
+                const errorText = await response.text();
+                console.error("Failed to save answer:", errorText);
                 alert("Failed to save answer. Please try again.");
             }
         } catch (err) {
@@ -316,116 +475,187 @@ const PatientHomePage = () => {
         }
     };
 
-    // Function to go back to previous question from end node
-    const handleGoBackFromEndNode = () => {
+    // ENHANCED: Function to go back to previous question with proper flag node handling
+    const handleGoBack = async () => {
         if (questionHistory.length > 0) {
-            const previousEntry = questionHistory[questionHistory.length - 1];
-            setCurrentQuestion(previousEntry.questionData);
-            setCurrentNodeId(previousEntry.nodeId);
-            setQuestionHistory(prev => prev.slice(0, -1));
+            try {
+                setAssessmentLoading(true);
+
+                // Start from the last entry and work backwards, deleting all entries until we find a question node
+                let entriesToDelete = [];
+                let targetQuestionEntry = null;
+
+                // Collect all entries that need to be deleted (working backwards)
+                for (let i = questionHistory.length - 1; i >= 0; i--) {
+                    const entry = questionHistory[i];
+                    entriesToDelete.push(entry);
+
+                    // If this is a question node (not auto-saved flag), this is our target to go back to
+                    if (!entry.isAutoSaved && (entry.nodeType === "question" || !entry.nodeType)) {
+                        targetQuestionEntry = entry; // THIS is the question we want to display
+                        break;
+                    }
+                }
+
+                // Delete all collected entries from database
+                for (const entry of entriesToDelete) {
+                    try {
+                        const response = await fetch(`${import.meta.env.VITE_API_URL}/patient/${patientId}/assessment/answer/${entry.nodeId}`, {
+                            method: 'DELETE',
+                            headers: {
+                                'Content-Type': 'application/json',
+                            }
+                        });
+
+                        if (response.ok) {
+                            console.log(`Deleted answer for node: ${entry.nodeId}`);
+                        } else {
+                            console.warn(`Failed to delete answer for node: ${entry.nodeId}`);
+                        }
+                    } catch (deleteError) {
+                        console.error(`Error deleting answer for node ${entry.nodeId}:`, deleteError);
+                        // Continue with other deletions even if one fails
+                    }
+                }
+
+                // Update question history by removing deleted entries
+                const newQuestionHistory = questionHistory.slice(0, questionHistory.length - entriesToDelete.length);
+                setQuestionHistory(newQuestionHistory);
+
+                // Navigate to the target question
+                if (targetQuestionEntry) {
+                    // Set the current question to the last deleted question node
+                    setCurrentQuestion(targetQuestionEntry.questionData);
+                    setCurrentNodeId(targetQuestionEntry.nodeId);
+
+                    // Restore commentary if it exists
+                    if (targetQuestionEntry.commentary) {
+                        setSavedCommentaries(prev => ({
+                            ...prev,
+                            [targetQuestionEntry.nodeId]: targetQuestionEntry.commentary
+                        }));
+                    }
+
+                    // Update the commentary textarea with saved commentary
+                    setTimeout(() => {
+                        const textarea = document.querySelector('.commentary-textarea');
+                        if (textarea && targetQuestionEntry.commentary) {
+                            textarea.value = targetQuestionEntry.commentary;
+                        }
+                    }, 100);
+
+                } else {
+                    // If no valid target found, go to start
+                    setCurrentQuestion(null);
+                    setCurrentNodeId(null);
+                    setQuestionHistory([]);
+                    setAssessmentStarted(false);
+                    setSavedCommentaries({});
+                    setCommentaryHistory([]);
+                }
+
+            } catch (err) {
+                console.error("Error during go back operation:", err);
+                alert("Error going back. Please try again.");
+            } finally {
+                setAssessmentLoading(false);
+            }
         }
     };
 
-    // Function to go back to previous question
-    const handleGoBack = () => {
-        if (questionHistory.length > 0) {
-            const previousEntry = questionHistory[questionHistory.length - 1];
-            setCurrentQuestion(previousEntry.questionData);
-            setCurrentNodeId(previousEntry.nodeId);
-            setQuestionHistory(prev => prev.slice(0, -1));
-        }
-    };
+    // FIXED: Function to handle proceeding from commentary-only nodes
+    const handleProceedFromCommentary = async () => {
+        try {
+            setAssessmentLoading(true);
 
-    // Function to handle manual completion when reaching end node
-    const handleCompleteAssessment = async () => {
-        await completeAssessment();
-    };
+            // Get commentary from textarea when proceeding
+            const textarea = document.querySelector('.commentary-textarea');
+            const commentaryText = textarea ? textarea.value.trim() : '';
 
-    // UPDATED: Function to handle proceeding from commentary-only nodes
-   // UPDATED: Function to handle proceeding from commentary-only nodes
-const handleProceedFromCommentary = async () => {
-    try {
-        setAssessmentLoading(true);
-        
-        // Get commentary from textarea when proceeding
-        const textarea = document.querySelector('.commentary-textarea');
-        const commentaryText = textarea ? textarea.value.trim() : '';
-        
-        // Save the commentary with a dummy answer for commentary-only nodes
-        const response = await fetch(`${import.meta.env.VITE_API_URL}/patient/${patientId}/assessment/answer`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                patientId: patientId,
-                questionId: currentNodeId,
-                answer: "Commentary provided", // Dummy answer for commentary-only nodes
-                questionText: currentQuestion.question,
-                commentary: commentaryText || null // AUTO-SAVE: Include commentary
-            })
-        });
+            // Extract database filters from current question node if present
+            const databaseFilters = extractDatabaseFilters(currentQuestion);
 
-        if (response.ok) {
-            // Save commentary locally for display
-            if (commentaryText) {
-                setSavedCommentaries(prev => ({
-                    ...prev,
-                    [currentNodeId]: commentaryText
-                }));
-                
-                setCommentaryHistory(prev => [...prev, {
+            // Save the commentary with a dummy answer for commentary-only nodes
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/patient/${patientId}/assessment/answer`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    patientId: parseInt(patientId),
+                    questionId: currentNodeId,
+                    answer: "Commentary provided",
+                    questionText: currentQuestion.question,
+                    commentary: commentaryText || null,
+                    databaseFilters: databaseFilters,
+                    nodeType: "question"
+                })
+            });
+
+            if (response.ok) {
+                // Save commentary locally for display
+                if (commentaryText) {
+                    setSavedCommentaries(prev => ({
+                        ...prev,
+                        [currentNodeId]: commentaryText
+                    }));
+
+                    setCommentaryHistory(prev => [...prev, {
+                        nodeId: currentNodeId,
+                        question: currentQuestion.question,
+                        commentary: commentaryText,
+                        timestamp: new Date().toISOString()
+                    }]);
+                }
+
+                setQuestionHistory(prev => [...prev, {
                     nodeId: currentNodeId,
                     question: currentQuestion.question,
-                    commentary: commentaryText,
-                    timestamp: new Date().toISOString()
+                    answer: "Commentary provided",
+                    questionData: currentQuestion,
+                    commentary: commentaryText || null,
+                    databaseFilters: databaseFilters,
+                    nodeType: "question"
                 }]);
-            }
 
-            setQuestionHistory(prev => [...prev, {
-                nodeId: currentNodeId,
-                question: currentQuestion.question,
-                answer: "Commentary provided",
-                questionData: currentQuestion,
-                commentary: commentaryText || null
-            }]);
-
-            // FIX: Check if the current node has a 'next' property to continue the flow
-            if (currentQuestion.next) {
-                // Continue to the next node in the decision tree
-                await fetchNextQuestion(currentQuestion.next);
+                // Check if the current node has a 'next' property to continue the flow
+                if (currentQuestion.next) {
+                    // Continue to the next node in the decision tree
+                    await fetchNextQuestion(currentQuestion.next);
+                } else {
+                    // If no next node, this is the end of the assessment path
+                    setCurrentQuestion({
+                        ...currentQuestion,
+                        isEndNode: true,
+                        selectedAnswer: null,
+                        endReason: "Commentary provided - end of assessment path"
+                    });
+                }
             } else {
-                // If no next node, this is the end of the assessment path
-                setCurrentQuestion({
-                    ...currentQuestion,
-                    isEndNode: true,
-                    selectedAnswer: null,
-                    endReason: "Commentary provided - end of assessment path"
-                });
+                const errorText = await response.text();
+                console.error("Failed to save commentary:", errorText);
+                alert("Failed to save commentary. Please try again.");
             }
-        } else {
-            alert("Failed to save commentary. Please try again.");
+        } catch (err) {
+            console.error("Error proceeding from commentary:", err);
+            alert("Error proceeding. Please try again.");
+        } finally {
+            setAssessmentLoading(false);
         }
-    } catch (err) {
-        console.error("Error proceeding from commentary:", err);
-        alert("Error proceeding. Please try again.");
-    } finally {
-        setAssessmentLoading(false);
-    }
-};
+    };
 
-    // Function to complete assessment (simplified)
+    // Function to complete assessment and fetch recommendations
     const completeAssessment = async () => {
         try {
             setAssessmentLoading(true);
-            
+
             const response = await fetch(`${import.meta.env.VITE_API_URL}/patient/${patientId}/assessment/complete`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    patientId: patientId,
+                    patientId: parseInt(patientId),
                     totalQuestions: questionHistory.length + (currentQuestion?.isEndNode ? 1 : 0),
                     finalNodeId: currentNodeId,
                     finalAction: currentQuestion?.action || null
@@ -435,6 +665,10 @@ const handleProceedFromCommentary = async () => {
             if (response.ok) {
                 const completedAssessment = await response.json();
                 setAssessmentData(completedAssessment);
+
+                // Fetch hearing aid recommendations after completion
+                await fetchHearingAidRecommendations(patientId);
+
                 setCurrentQuestion(null);
                 setQuestionHistory([]);
                 setCurrentNodeId(null);
@@ -461,6 +695,15 @@ const handleProceedFromCommentary = async () => {
         setAssessmentStarted(false);
         setSavedCommentaries({});
         setCommentaryHistory([]);
+        setHearingAidRecommendations(null);
+    };
+
+    // Function to handle viewing hearing aid recommendations
+    const handleViewRecommendations = async () => {
+        if (!hearingAidRecommendations) {
+            await fetchHearingAidRecommendations(patientId);
+        }
+        setActiveTab("Hearing Aid Recommendations");
     };
 
     // Function to format option text for better readability
@@ -489,54 +732,185 @@ const handleProceedFromCommentary = async () => {
             'right': 'Right ear',
             'equally': 'Both ears equally'
         };
-        
+
         return optionMap[option] || option.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
     };
 
-    // UPDATED: Commentary Panel Component - No Save Button
-    // FIX: Update the CommentaryPanel component to show correct question numbers
+    // Component to display hearing aid recommendations
+    const HearingAidRecommendations = () => {
+        const [expandedCards, setExpandedCards] = useState(new Set());
 
-const CommentaryPanel = () => {
-    return (
-        <div className="commentary-panel">
-            <div className="commentary-header">
-                <h4><FaComments /> Notes & Commentary</h4>
-            </div>
-            
-            <div className="commentary-content">
-                <div className="current-commentary">
-                    <label>Notes for this question:</label>
-                    <textarea
-                        defaultValue={savedCommentaries[currentNodeId] || ""}
-                        placeholder="Add your notes here... (will be saved automatically when you proceed)"
-                        rows={4}
-                        className="commentary-textarea"
-                    />
+        const toggleExpanded = (cardId) => {
+            const newExpanded = new Set(expandedCards);
+            if (newExpanded.has(cardId)) {
+                newExpanded.delete(cardId);
+            } else {
+                newExpanded.add(cardId);
+            }
+            setExpandedCards(newExpanded);
+        };
+
+        const truncateText = (text, maxLength = 100) => {
+            if (!text || text.length <= maxLength) return text;
+            return text.substring(0, maxLength) + '...';
+        };
+
+        if (recommendationsLoading) {
+            return (
+                <div className="loading-container">
+                    <p>Loading hearing aid recommendations...</p>
                 </div>
-                
-                {commentaryHistory.length > 0 && (
-                    <div className="commentary-history">
-                        <h5>Previous Notes ({commentaryHistory.length}):</h5>
-                        <div className="commentary-list">
-                            {commentaryHistory.slice(-3).map((entry, index) => {
-                                // FIX: Find the actual question number from questionHistory
-                                const actualQuestionIndex = questionHistory.findIndex(q => q.nodeId === entry.nodeId);
-                                const questionNumber = actualQuestionIndex >= 0 ? actualQuestionIndex + 1 : index + 1;
-                                
-                                return (
-                                    <div key={index} className="commentary-entry">
-                                        <div className="commentary-question">Q{questionNumber}</div>
-                                        <div className="commentary-text">{entry.commentary}</div>
+            );
+        }
+
+        if (!hearingAidRecommendations) {
+            return (
+                <div className="recommendations-container">
+                    <h4>No Recommendations Available</h4>
+                    <p>Complete the hearing assessment to receive personalized hearing aid recommendations.</p>
+                </div>
+            );
+        }
+
+        const { assessment, hearingAidRecommendations: recommendations, filterInfo } = hearingAidRecommendations;
+
+        return (
+            <div className="recommendations-container">
+                {recommendations.length > 0 ? (
+                    <div className="hearing-aids-scrollable-grid">
+                        {recommendations.map((hearingAid, index) => {
+                            const cardId = hearingAid.id || index;
+                            const isExpanded = expandedCards.has(cardId);
+                            const hasLongDescription = hearingAid.description && hearingAid.description.length > 100;
+
+                            return (
+                                <div key={cardId} className="hearing-aid-grid-card">
+                                    <div className="hearing-aid-grid-header">
+                                        <h6>{hearingAid.manufacturer}</h6>
+                                        <p className="model-name">{hearingAid.hearingAidName}</p>
+                                        {hearingAid.descriptionProductLine && (
+                                            <span className="product-line">{hearingAid.descriptionProductLine}</span>
+                                        )}
                                     </div>
-                                );
-                            })}
-                        </div>
+
+                                    <div className="hearing-aid-grid-details">
+                                        {hearingAid.description && (
+                                            <div className="grid-detail-row description-row">
+                                                <span className="grid-label">Description</span>
+                                                <div className="grid-value description-value">
+                                                    <span className="description-text">
+                                                        {isExpanded ? hearingAid.description : truncateText(hearingAid.description)}
+                                                    </span>
+                                                    {hasLongDescription && (
+                                                        <button
+                                                            className="expand-btn"
+                                                            onClick={() => toggleExpanded(cardId)}
+                                                        >
+                                                            {isExpanded ? 'Show Less' : 'Show More'}
+                                                        </button>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        <div className="grid-detail-row">
+                                            <span className="grid-label">Style</span>
+                                            <span className="grid-value">{hearingAid.hearingAidStyle}</span>
+                                        </div>
+
+                                        <div className="grid-detail-row">
+                                            <span className="grid-label">Form Factor</span>
+                                            <span className="grid-value">{hearingAid.styleFormFactor}</span>
+                                        </div>
+
+                                        <div className="grid-detail-row">
+                                            <span className="grid-label">Suitable For</span>
+                                            <span className="grid-value">{hearingAid.maxGainHearingLossCompatibility}</span>
+                                        </div>
+
+                                        {hearingAid.batterySize && (
+                                            <div className="grid-detail-row">
+                                                <span className="grid-label">Battery</span>
+                                                <span className="grid-value">Size {hearingAid.batterySize}</span>
+                                            </div>
+                                        )}
+
+                                        {hearingAid.maxOutputDbSpl && (
+                                            <div className="grid-detail-row">
+                                                <span className="grid-label">Max Output</span>
+                                                <span className="grid-value">{hearingAid.maxOutputDbSpl} dB SPL</span>
+                                            </div>
+                                        )}
+
+                                        {hearingAid.tinnitusManagementFeatures && (
+                                            <div className="grid-detail-row">
+                                                <span className="grid-label">Tinnitus Support</span>
+                                                <span className="grid-value">{hearingAid.tinnitusManagementFeatures}</span>
+                                            </div>
+                                        )}
+
+                                        {hearingAid.cochlearImplantCompatible === 'yes' && (
+                                            <div className="grid-detail-row">
+                                                <span className="grid-label">CI Compatible</span>
+                                                <span className="grid-value">Yes</span>
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                ) : (
+                    <div className="no-recommendations">
+                        <p>No hearing aids match the specific criteria from your assessment.</p>
+                        <p>Please consult with your audiologist for alternative options.</p>
                     </div>
                 )}
             </div>
-        </div>
-    );
-};
+        );
+    };
+
+    // Commentary Panel Component
+    const CommentaryPanel = () => {
+        return (
+            <div className="commentary-panel">
+                <div className="commentary-header">
+                    <h4><FaComments /> Notes & Commentary</h4>
+                </div>
+
+                <div className="commentary-content">
+                    <div className="current-commentary">
+                        <label>Notes for this question:</label>
+                        <textarea
+                            defaultValue={savedCommentaries[currentNodeId] || ""}
+                            placeholder="Add your notes here... (will be saved automatically when you proceed)"
+                            rows={4}
+                            className="commentary-textarea"
+                        />
+                    </div>
+
+                    {commentaryHistory.length > 0 && (
+                        <div className="commentary-history">
+                            <h5>Previous Notes ({commentaryHistory.length}):</h5>
+                            <div className="commentary-list">
+                                {commentaryHistory.slice(-3).map((entry, index) => {
+                                    const actualQuestionIndex = questionHistory.findIndex(q => q.nodeId === entry.nodeId);
+                                    const questionNumber = actualQuestionIndex >= 0 ? actualQuestionIndex + 1 : index + 1;
+
+                                    return (
+                                        <div key={index} className="commentary-entry">
+                                            <div className="commentary-question">Q{questionNumber}</div>
+                                            <div className="commentary-text">{entry.commentary}</div>
+                                        </div>
+                                    );
+                                })}
+                            </div>
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    };
 
     // Handling loading, error, and not found states
     if (loading) {
@@ -546,7 +920,7 @@ const CommentaryPanel = () => {
     if (error) {
         return <div className="patient-page error-message">Error: {error}</div>;
     }
-    
+
     if (!patient) {
         return <div className="patient-page">No patient data found.</div>;
     }
@@ -560,9 +934,9 @@ const CommentaryPanel = () => {
         {
             title: "First Appointment",
             date: firstAppointment ? new Date(firstAppointment.appointmentDate).toLocaleDateString() : null,
-            status: firstAppointment 
-                ? (firstAppointment.status === "Completed" ? "completed" : 
-                   firstAppointment.status === "In Progress" ? "in-progress" : "scheduled")
+            status: firstAppointment
+                ? (firstAppointment.status === "Completed" ? "completed" :
+                    firstAppointment.status === "In Progress" ? "in-progress" : "scheduled")
                 : "pending"
         },
         {
@@ -579,6 +953,7 @@ const CommentaryPanel = () => {
     const tabs = [
         "Patient Journey",
         "Hearing Assessment",
+        "Hearing Aid Recommendations",
         "First Appointment",
         "Trial",
         "Fitting Follow Up"
@@ -637,7 +1012,7 @@ const CommentaryPanel = () => {
                         <p className="subtitle">
                             {assessmentData ? "Detailed hearing assessment results and analysis" : "Interactive hearing assessment questionnaire"}
                         </p>
-                        
+
                         {assessmentLoading ? (
                             <div className="loading-container">
                                 <p>Loading assessment data...</p>
@@ -650,7 +1025,7 @@ const CommentaryPanel = () => {
                                     <p><strong>Status:</strong> {assessmentData.status || 'Completed'}</p>
                                     {assessmentData.duration && <p><strong>Duration:</strong> {assessmentData.duration} minutes</p>}
                                 </div>
-                                
+
                                 <div className="assessment-section">
                                     <h4>Assessment Summary</h4>
                                     <p><strong>Questions Answered:</strong> {assessmentData.totalQuestions || 'N/A'}</p>
@@ -659,7 +1034,7 @@ const CommentaryPanel = () => {
                                         <p><strong>Recommendation:</strong> {assessmentData.finalRecommendation}</p>
                                     )}
                                 </div>
-                                
+
                                 <div className="assessment-section">
                                     <h4>Key Findings</h4>
                                     {assessmentData.keyFindings ? (
@@ -672,13 +1047,26 @@ const CommentaryPanel = () => {
                                         <p>Assessment completed successfully. Detailed analysis available in patient records.</p>
                                     )}
                                 </div>
-                                
+
                                 <div className="assessment-section">
                                     <h4>Next Steps</h4>
                                     <p>{assessmentData.nextSteps || "Proceed to hearing aid consultation and fitting process."}</p>
                                 </div>
 
-                                <button 
+                                {hearingAidRecommendations && (
+                                    <div className="assessment-section">
+                                        <h4>Hearing Aid Recommendations</h4>
+                                        <p>Based on your assessment, we found {hearingAidRecommendations.filterInfo.recommendedCount} suitable hearing aids.</p>
+                                        <button
+                                            className="view-recommendations-btn"
+                                            onClick={handleViewRecommendations}
+                                        >
+                                            View Personalized Recommendations
+                                        </button>
+                                    </div>
+                                )}
+
+                                <button
                                     className="restart-assessment-btn"
                                     onClick={handleRestartAssessment}
                                     disabled={assessmentLoading}
@@ -694,30 +1082,24 @@ const CommentaryPanel = () => {
                                         {/* Main Question Area */}
                                         <div className="question-main">
                                             <div className="question-header">
-                                                {/*<div className="progress-bar">*/}
-                                                {/*    <div */}
-                                                {/*        className="progress-fill" */}
-                                                {/*        style={{width: `${(questionHistory.length / 20) * 100}%`}}*/}
-                                                {/*    ></div>*/}
-                                                {/*</div>*/}
                                                 <p className="question-counter">Question {questionHistory.length + 1}</p>
                                                 <p className="current-module">Module: {currentQuestion.module || 'General'}</p>
                                             </div>
-                                            
+
                                             <div className="question-content">
                                                 <h4>{currentQuestion.question}</h4>
                                                 {currentQuestion.description && (
                                                     <p className="question-description">{currentQuestion.description}</p>
                                                 )}
                                             </div>
-                                            
+
                                             {currentQuestion.isEndNode ? (
                                                 // End node handling
                                                 <div className="assessment-completion">
                                                     <div className="completion-message">
                                                         <h4>Assessment Path Complete</h4>
                                                         <p>You have reached the end of this assessment path based on your responses.</p>
-                                                        
+
                                                         {currentQuestion.action && (
                                                             <div className="action-message">
                                                                 <p><strong>Clinical Recommendation:</strong></p>
@@ -725,7 +1107,7 @@ const CommentaryPanel = () => {
                                                             </div>
                                                         )}
                                                     </div>
-                                                    
+
                                                     <div className="completion-actions">
                                                         <button
                                                             className="complete-assessment-btn"
@@ -734,9 +1116,9 @@ const CommentaryPanel = () => {
                                                         >
                                                             {assessmentLoading ? "Saving Assessment..." : "Complete & Save Assessment"}
                                                         </button>
-                                                        
+
                                                         {questionHistory.length > 0 && (
-                                                            <button 
+                                                            <button
                                                                 className="back-btn"
                                                                 onClick={handleGoBack}
                                                                 disabled={assessmentLoading}
@@ -761,9 +1143,9 @@ const CommentaryPanel = () => {
                                                             </button>
                                                         ))}
                                                     </div>
-                                                    
+
                                                     {questionHistory.length > 0 && (
-                                                        <button 
+                                                        <button
                                                             className="back-btn"
                                                             onClick={handleGoBack}
                                                             disabled={assessmentLoading}
@@ -772,16 +1154,16 @@ const CommentaryPanel = () => {
                                                         </button>
                                                     )}
                                                 </div>
-                                            ) : (
-                                                // Commentary-only node (no answer options)
+                                            ) : currentQuestion.question && !currentQuestion.conditions ? (
+                                                // Commentary-only node (has question but no answer options)
                                                 <div className="commentary-only-section">
                                                     <div className="commentary-prompt">
                                                         <p className="prompt-text">
-                                                            <FaComments /> This question requires additional information. 
+                                                            <FaComments /> This question requires additional information.
                                                             Please provide details in the commentary section.
                                                         </p>
                                                     </div>
-                                                    
+
                                                     <div className="action-buttons">
                                                         <button
                                                             className="proceed-btn"
@@ -790,9 +1172,9 @@ const CommentaryPanel = () => {
                                                         >
                                                             {assessmentLoading ? "Processing..." : "Proceed to Next"}
                                                         </button>
-                                                        
+
                                                         {questionHistory.length > 0 && (
-                                                            <button 
+                                                            <button
                                                                 className="back-btn"
                                                                 onClick={handleGoBack}
                                                                 disabled={assessmentLoading}
@@ -801,6 +1183,18 @@ const CommentaryPanel = () => {
                                                             </button>
                                                         )}
                                                     </div>
+                                                </div>
+                                            ) : (
+                                                // This should not happen if auto-processing is working correctly
+                                                <div className="error-section">
+                                                    <p>Error: Invalid question node. Please contact support.</p>
+                                                    <button
+                                                        className="back-btn"
+                                                        onClick={handleGoBack}
+                                                        disabled={assessmentLoading}
+                                                    >
+                                                        ← Go Back
+                                                    </button>
                                                 </div>
                                             )}
                                         </div>
@@ -835,8 +1229,8 @@ const CommentaryPanel = () => {
                                                 </div>
                                             </div>
                                         </div>
-                                        
-                                        <button 
+
+                                        <button
                                             className="start-assessment-btn"
                                             onClick={handleStartAssessment}
                                             disabled={assessmentLoading}
@@ -850,18 +1244,29 @@ const CommentaryPanel = () => {
                     </div>
                 );
 
+            case "Hearing Aid Recommendations":
+                return (
+                    <div className="journey-box">
+                        <h3>Hearing Aid Recommendations</h3>
+                        <p className="subtitle">
+                            Personalized hearing aid recommendations based on your assessment
+                        </p>
+                        <HearingAidRecommendations />
+                    </div>
+                );
+
             case "First Appointment":
                 return (
                     <div className="journey-box">
                         <h3>First Appointment</h3>
-                        
+
                         <div className="appointment-content">
                             <div className="appointment-section">
                                 <h4>Appointment Date: 2024-01-20</h4>
                                 <p><strong>Status:</strong> Completed</p>
                                 <p><strong>Duration:</strong> 60 minutes</p>
                             </div>
-                            
+
                             <div className="appointment-section">
                                 <h4>Discussion Points</h4>
                                 <ul>
@@ -871,13 +1276,13 @@ const CommentaryPanel = () => {
                                     <li>Demonstrated hearing aid features</li>
                                 </ul>
                             </div>
-                            
+
                             <div className="appointment-section">
                                 <h4>Hearing Aid Selection</h4>
                                 <p><strong>Recommended Model:</strong> Premium BTE with Bluetooth connectivity</p>
                                 <p><strong>Features:</strong> Noise reduction, directional microphones, smartphone app control</p>
                             </div>
-                            
+
                             <div className="appointment-section">
                                 <h4>Next Steps</h4>
                                 <p>Schedule trial period to test the recommended hearing aids in real-world situations.</p>
@@ -891,13 +1296,13 @@ const CommentaryPanel = () => {
                     <div className="journey-box">
                         <h3>Trial Period</h3>
                         <p className="subtitle">Testing hearing aids in real-world environments</p>
-                        
+
                         <div className="trial-content">
                             <div className="trial-section">
                                 <h4>Status: Pending</h4>
                                 <p>Trial will be scheduled after first appointment completion</p>
                             </div>
-                            
+
                             <div className="trial-section">
                                 <h4>What to Expect</h4>
                                 <ul>
@@ -907,7 +1312,7 @@ const CommentaryPanel = () => {
                                     <li>Patient feedback collection</li>
                                 </ul>
                             </div>
-                            
+
                             <div className="trial-section">
                                 <h4>Trial Benefits</h4>
                                 <p>Experience the hearing aids in your daily life before making a final decision.</p>
@@ -921,13 +1326,13 @@ const CommentaryPanel = () => {
                     <div className="journey-box">
                         <h3>Fitting Follow Up</h3>
                         <p className="subtitle">Post-fitting adjustments and support</p>
-                        
+
                         <div className="followup-content">
                             <div className="followup-section">
                                 <h4>Status: Pending</h4>
                                 <p>Scheduled after successful trial completion</p>
                             </div>
-                            
+
                             <div className="followup-section">
                                 <h4>Planned Activities</h4>
                                 <ul>
@@ -937,12 +1342,12 @@ const CommentaryPanel = () => {
                                     <li>Schedule regular check-up appointments</li>
                                 </ul>
                             </div>
-                            
+
                             <div className="followup-section">
                                 <h4>Expected Outcomes</h4>
                                 <p>Patient should be comfortable with hearing aids and confident in their daily use.</p>
                             </div>
-                            
+
                             <div className="followup-section">
                                 <h4>Long-term Care Plan</h4>
                                 <p>6-month follow-up appointments for optimal performance monitoring.</p>
@@ -960,11 +1365,12 @@ const CommentaryPanel = () => {
                 );
         }
     };
+
     const OtoPilotChatbot = () => {
-  return (
-    <ChatBot/>
-  );
-};
+        return (
+            <ChatBot />
+        );
+    };
 
     return (
         <div className="patient-page">
@@ -1001,7 +1407,7 @@ const CommentaryPanel = () => {
                             </button>
                         ))}
                     </div>
-                    <button 
+                    <button
                         className="back-to-welcome-btn"
                         onClick={handleBackToWelcome}
                         title="Back to Welcome Page"
