@@ -17,12 +17,11 @@ const PatientHomePage = () => {
     const [assessmentData, setAssessmentData] = useState(null);
     const [assessmentLoading, setAssessmentLoading] = useState(false);
 
-    // State for First Appointment
-    const [firstAppointment, setFirstAppointment] = useState(null);
-    const [appointmentLoading, setAppointmentLoading] = useState(false);
-    const [showPreAppointmentForm, setShowPreAppointmentForm] = useState(false);
-    const [preAppointmentComments, setPreAppointmentComments] = useState("");
-    const [appointmentDate, setAppointmentDate] = useState("");
+    // State for First Appointment (static UI only - no backend)
+    const [firstAppointment] = useState({
+        appointmentDate: new Date().toLocaleDateString(),
+        status: "completed"
+    });
 
     // State for dynamic questionnaire
     const [currentQuestion, setCurrentQuestion] = useState(null);
@@ -73,7 +72,6 @@ const PatientHomePage = () => {
                 setPatient(data);
 
                 await fetchAssessmentData(patientId);
-                await fetchFirstAppointmentData(patientId);
             } catch (err) {
                 setError(err.message);
             } finally {
@@ -83,100 +81,6 @@ const PatientHomePage = () => {
 
         getPatientDetails();
     }, [patientId]);
-
-    // Function to fetch first appointment data
-    const fetchFirstAppointmentData = async (patientId) => {
-        try {
-            setAppointmentLoading(true);
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/FirstAppointment/patient/${patientId}`);
-
-            if (response.ok) {
-                const appointmentData = await response.json();
-                setFirstAppointment(appointmentData);
-            } else if (response.status === 404) {
-                setFirstAppointment(null);
-            } else {
-                console.error("Failed to fetch first appointment data");
-            }
-        } catch (err) {
-            console.error("Error fetching first appointment:", err);
-            setFirstAppointment(null);
-        } finally {
-            setAppointmentLoading(false);
-        }
-    };
-
-    // Function to handle creating a first appointment
-    const handleCreateFirstAppointment = async () => {
-        try {
-            setAppointmentLoading(true);
-
-            const appointmentDateTime = appointmentDate
-                ? new Date(appointmentDate).toISOString()
-                : new Date().toISOString();
-
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/FirstAppointment/patient/${patientId}/create`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    patientId: parseInt(patientId),
-                    preAppointmentComments: preAppointmentComments.trim() || null,
-                    appointmentDate: appointmentDateTime
-                })
-            });
-
-            if (response.ok) {
-                const newAppointment = await response.json();
-                setFirstAppointment(newAppointment);
-                setShowPreAppointmentForm(false);
-                setPreAppointmentComments("");
-                setAppointmentDate("");
-                alert("First appointment created successfully!");
-            } else {
-                const errorText = await response.text();
-                alert(`Failed to create appointment: ${errorText}`);
-            }
-        } catch (err) {
-            console.error("Error creating first appointment:", err);
-            alert("Error creating appointment. Please try again.");
-        } finally {
-            setAppointmentLoading(false);
-        }
-    };
-
-    // Function to handle starting the appointment
-    const handleStartAppointment = async () => {
-        try {
-            setAppointmentLoading(true);
-
-            const response = await fetch(`${import.meta.env.VITE_API_URL}/FirstAppointment/${firstAppointment.id}/start`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    appointmentId: firstAppointment.id,
-                    appointmentNotes: "Starting appointment consultation"
-                })
-            });
-
-            if (response.ok) {
-                const updatedAppointment = await response.json();
-                setFirstAppointment(updatedAppointment);
-                alert("Appointment started successfully!");
-            } else {
-                const errorText = await response.text();
-                alert(`Failed to start appointment: ${errorText}`);
-            }
-        } catch (err) {
-            console.error("Error starting appointment:", err);
-            alert("Error starting appointment. Please try again.");
-        } finally {
-            setAppointmentLoading(false);
-        }
-    };
 
     // Function to fetch hearing aid recommendations
     const fetchHearingAidRecommendations = async (patientId) => {
@@ -933,11 +837,8 @@ const PatientHomePage = () => {
         },
         {
             title: "First Appointment",
-            date: firstAppointment ? new Date(firstAppointment.appointmentDate).toLocaleDateString() : null,
-            status: firstAppointment
-                ? (firstAppointment.status === "Completed" ? "completed" :
-                    firstAppointment.status === "In Progress" ? "in-progress" : "scheduled")
-                : "pending"
+            date: new Date().toLocaleDateString(), // Static date since backend is not ready
+            status: "completed" // Static status
         },
         {
             title: "Trial",
@@ -987,9 +888,13 @@ const PatientHomePage = () => {
                                         <strong>{step.title}</strong>
                                         {step.date && (
                                             <p>
-                                                {step.status === "completed"
-                                                    ? `Completed on: ${step.date}`
-                                                    : `Scheduled for: ${step.date}`}
+                                                {
+                                                    //step.status === "completed"
+                                                    //? `Completed on: ${step.date}`
+                                                    //    : `Scheduled for: ${step.date}`
+                                                    `Completed on: ${step.date}`
+                                                }
+                                               
                                             </p>
                                         )}
                                         {step.status === "in-progress" && (
@@ -1262,7 +1167,7 @@ const PatientHomePage = () => {
 
                         <div className="appointment-content">
                             <div className="appointment-section">
-                                <h4>Appointment Date: 2024-01-20</h4>
+                                <h4>Appointment Date:{new Date().toLocaleDateString()}</h4>
                                 <p><strong>Status:</strong> Completed</p>
                                 <p><strong>Duration:</strong> 60 minutes</p>
                             </div>

@@ -13,7 +13,7 @@ namespace AudiologyChatBot.Infrastructure.Services
             Console.WriteLine("=== PatientService: Using DATABASE repository ===");
         }
 
-        public List<Patient> GetAllPatients()
+        public List<PatientModel> GetAllPatients()
         {
             try
             {
@@ -34,7 +34,7 @@ namespace AudiologyChatBot.Infrastructure.Services
                 Console.WriteLine($"=== FULL ERROR: {ex} ===");
                 
                 // Return empty list instead of crashing
-                return new List<Patient>();
+                return new List<PatientModel>();
             }
         }
     }
