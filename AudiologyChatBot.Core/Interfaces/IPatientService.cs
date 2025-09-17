@@ -4,6 +4,6 @@ namespace AudiologyChatBot.Core.Interfaces
 {
     public interface IPatientService
     {
-        List<Patient> GetAllPatients();
+        List<PatientModel> GetAllPatients();
     }
 }

@@ -1,7 +1,6 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using AudiologyChatBot.Core.Interfaces;
 using AudiologyChatBot.Core.Models;
-using Microsoft.Data.SqlClient;
 
 namespace ChatbotAPI.Controllers
 {
@@ -24,151 +23,61 @@ namespace ChatbotAPI.Controllers
             var patients = _service.GetAllPatients();
             return Ok(patients);
         }
-        [HttpGet("test")]
-        public IActionResult Test()
-        {
-            return Ok(new
-            {
-                message = "Controller is working!",
-                timestamp = DateTime.Now,
-                environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT") ?? "Unknown"
-            });
-        }
-        [HttpGet("dbtest")]
-        public IActionResult DatabaseTest()
-        {
-            try
-            {
-                var patients = _service.GetAllPatients();
-
-                return Ok(new
-                {
-                    success = true,
-                    patientCount = patients?.Count ?? 0,
-                    hasPatients = patients?.Any() ?? false,
-                    firstPatientId = patients?.FirstOrDefault()?.Id,
-                    firstPatientName = patients?.FirstOrDefault()?.FullName,
-                    allPatientIds = patients?.Select(p => p.Id).ToList(),
-                    timestamp = DateTime.Now
-                });
-            }
-            catch (Exception ex)
-            {
-                return Ok(new
-                {
-                    success = false,
-                    error = ex.Message,
-                    innerError = ex.InnerException?.Message,
-                    stackTrace = ex.StackTrace?.Split('\n').Take(3).ToArray(),
-                    timestamp = DateTime.Now
-                });
-            }
-        }
-        [HttpGet("repotest")]
-        public async Task<IActionResult> RepositoryTest()
-        {
-            try
-            {
-                // Test repository directly
-                var patients = await _repository.GetAllPatientsAsync();
-
-                return Ok(new
-                {
-                    success = true,
-                    repositoryPatientCount = patients?.Count ?? 0,
-                    hasRepositoryPatients = patients?.Any() ?? false,
-                    firstRepositoryPatient = patients?.FirstOrDefault(),
-                    timestamp = DateTime.Now
-                });
-            }
-            catch (Exception ex)
-            {
-                return Ok(new
-                {
-                    success = false,
-                    error = ex.Message,
-                    innerError = ex.InnerException?.Message,
-                    timestamp = DateTime.Now
-                });
-            }
-        }
-
-        [HttpGet("detailedtest")]
-        public IActionResult DetailedTest()
-        {
-            try
-            {
-                // Get connection string through dependency injection
-                var connectionString = _service.GetType()
-                    .GetField("_patientRepository", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance)?
-                    .GetValue(_service);
-
-                // Actually, let's do it simpler - let's test through the service layer
-                var patients = _service.GetAllPatients();
-
-                return Ok(new
-                {
-                    success = true,
-                    patientCount = patients?.Count ?? 0,
-                    hasPatients = patients?.Any() ?? false,
-                    firstPatient = patients?.FirstOrDefault(),
-                    timestamp = DateTime.Now
-                });
-            }
-            catch (Exception ex)
-            {
-                return Ok(new
-                {
-                    success = false,
-                    error = ex.Message,
-                    innerError = ex.InnerException?.Message,
-                    stackTrace = ex.StackTrace?.Split('\n').Take(5), // First 5 lines only
-                    timestamp = DateTime.Now
-                });
-            }
-        }
 
         [HttpGet("{patientId}")]
-        public IActionResult GetPatientDetails(int patientId)
+        public async Task<IActionResult> GetPatientDetails(int patientId)
         {
-            var patient = _service.GetAllPatients().FirstOrDefault(p => p.Id == patientId);
-
-            if (patient == null)
+            try
             {
-                return NotFound();
+                var patient = await _repository.GetPatientByIdAsync(patientId);
+                if (patient == null)
+                {
+                    return NotFound($"Patient with ID {patientId} not found");
+                }
+                return Ok(patient);
             }
-
-            return Ok(patient);
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Internal server error: {ex.Message}");
+            }
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreatePatient([FromBody] Patient patient)
+        public async Task<IActionResult> CreatePatient([FromBody] CreatePatientRequest request)
         {
             try
             {
                 // Validate required fields
-                if (string.IsNullOrWhiteSpace(patient.FullName) || 
-                    string.IsNullOrWhiteSpace(patient.Phone))
+                if (string.IsNullOrWhiteSpace(request.FullName) ||
+                    string.IsNullOrWhiteSpace(request.Phone))
                 {
                     return BadRequest("Full Name and Phone are required fields");
                 }
 
-                // Set default values
-                if (string.IsNullOrWhiteSpace(patient.Email))
+                // Create PatientModel from request
+                var patient = new PatientModel
                 {
-                    patient.Email = "no-email@example.com";
-                }
+                    Gender = request.Gender ?? "",
+                    DateOfBirth = request.Age.HasValue ? DateTime.Now.AddYears(-request.Age.Value) : null,
+                    Email = string.IsNullOrWhiteSpace(request.Email) ? "no-email@example.com" : request.Email,
+                    ActivePatient = true
+                };
 
-                
+                // Use helper methods to parse the incoming data
+                patient.SetFullName(request.FullName);
+                patient.SetPhone(request.Phone);
+                patient.SetAddress(request.Address ?? "");
 
                 // Create patient in database
                 var newPatientId = await _repository.CreatePatientAsync(patient);
-                patient.Id = newPatientId;
+
+                // Get the created patient to return complete data
+                var createdPatient = await _repository.GetPatientByIdAsync(newPatientId);
 
                 return CreatedAtAction(
-                    nameof(GetPatientDetails), 
-                    new { patientId = newPatientId }, 
-                    patient
+                    nameof(GetPatientDetails),
+                    new { patientId = newPatientId },
+                    createdPatient
                 );
             }
             catch (Exception ex)
@@ -178,11 +87,11 @@ namespace ChatbotAPI.Controllers
         }
 
         [HttpPut("{patientId}")]
-        public async Task<IActionResult> UpdatePatient(int patientId, [FromBody] Patient patient)
+        public async Task<IActionResult> UpdatePatient(int patientId, [FromBody] UpdatePatientRequest request)
         {
             try
             {
-                if (patientId != patient.Id)
+                if (patientId != request.Id)
                 {
                     return BadRequest("Patient ID mismatch");
                 }
@@ -193,10 +102,39 @@ namespace ChatbotAPI.Controllers
                     return NotFound("Patient not found");
                 }
 
-                var success = await _repository.UpdatePatientAsync(patient);
+                // Update the patient model
+                existingPatient.Email = request.Email;
+                existingPatient.Gender = request.Gender ?? "";
+
+                // Handle name parsing for FullName
+                if (!string.IsNullOrWhiteSpace(request.FullName))
+                {
+                    existingPatient.SetFullName(request.FullName);
+                }
+
+                // Handle age to date of birth conversion
+                if (request.Age.HasValue)
+                {
+                    existingPatient.DateOfBirth = DateTime.Now.AddYears(-request.Age.Value);
+                }
+
+                // Update phone and address
+                if (!string.IsNullOrWhiteSpace(request.Phone))
+                {
+                    existingPatient.SetPhone(request.Phone);
+                }
+
+                if (!string.IsNullOrWhiteSpace(request.Address))
+                {
+                    existingPatient.SetAddress(request.Address);
+                }
+
+                var success = await _repository.UpdatePatientAsync(existingPatient);
                 if (success)
                 {
-                    return Ok(patient);
+                    // Return the updated patient
+                    var updatedPatient = await _repository.GetPatientByIdAsync(patientId);
+                    return Ok(updatedPatient);
                 }
 
                 return StatusCode(500, "Failed to update patient");
@@ -231,5 +169,28 @@ namespace ChatbotAPI.Controllers
                 return StatusCode(500, $"Internal server error: {ex.Message}");
             }
         }
+    }
+
+    // Request DTOs for better API design
+    public class CreatePatientRequest
+    {
+        public string FullName { get; set; } = string.Empty;
+        public string? Gender { get; set; }
+        public int? Age { get; set; }
+        public string? Address { get; set; }
+        public string Phone { get; set; } = string.Empty;
+        public string? Email { get; set; }
+    }
+
+    public class UpdatePatientRequest
+    {
+        public int Id { get; set; }
+        public string FullName { get; set; } = string.Empty;
+        public string? Gender { get; set; }
+        public int? Age { get; set; }
+        public string? Address { get; set; }
+        public string Phone { get; set; } = string.Empty;
+        public string? Email { get; set; }
+        public string? LastVisit { get; set; }
     }
 }

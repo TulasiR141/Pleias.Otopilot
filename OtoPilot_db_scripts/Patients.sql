@@ -1,5 +1,5 @@
 
-CREATE TABLE [dbo].[Patients](
+CREATE TABLE [dbo].[Patient](
 	[Id] [int] IDENTITY(1,1) NOT NULL,
 	[FullName] [nvarchar](200) NOT NULL,
 	[Gender] [nvarchar](50) NOT NULL,
@@ -17,10 +17,10 @@ PRIMARY KEY CLUSTERED
 ) ON [PRIMARY]
 GO
 
-ALTER TABLE [dbo].[Patients] ADD  DEFAULT (getdate()) FOR [CreatedDate]
+ALTER TABLE [dbo].[Patient] ADD  DEFAULT (getdate()) FOR [CreatedDate]
 GO
 
-ALTER TABLE [dbo].[Patients] ADD  DEFAULT (getdate()) FOR [UpdatedDate]
+ALTER TABLE [dbo].[Patient] ADD  DEFAULT (getdate()) FOR [UpdatedDate]
 GO
 
 
