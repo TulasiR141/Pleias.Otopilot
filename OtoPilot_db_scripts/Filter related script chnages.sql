@@ -1,6 +1,9 @@
 -- Add column to store database filters as JSON in AssessmentAnswers table 
 -- execute line by line
 ALTER TABLE AssessmentAnswers 
+ADD Commentary NVARCHAR(2000) NULL;
+
+ALTER TABLE AssessmentAnswers 
 ADD DatabaseFilters NVARCHAR(MAX) NULL;
 
 
