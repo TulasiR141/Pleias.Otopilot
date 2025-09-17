@@ -51,7 +51,7 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowReact", policy =>
     {
         policy.WithOrigins("http://localhost:5173",  // Local development
-                "https://gentle-plant-0e3550410-preview.centralus.2.azurestaticapps.net"  // Production
+                "https://black-island-057c5050f.2.azurestaticapps.net"  // Production
             ) // Your React app URL
               .AllowAnyHeader()
               .AllowAnyMethod()
