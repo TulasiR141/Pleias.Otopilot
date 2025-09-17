@@ -1,6 +1,6 @@
 // src/api/patientApi.js
 export async function createPatient(patientData) {
-  const response = await fetch('https://otopilot-api-8175.azurewebsites.net/api/patient', {
+  const response = await fetch('https://otopilot-api-8175.azurewebsites.net/api/patient' , {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json'
