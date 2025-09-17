@@ -3,6 +3,7 @@
 ALTER TABLE AssessmentAnswers 
 ADD Commentary NVARCHAR(2000) NULL;
 
+
 ALTER TABLE AssessmentAnswers 
 ADD DatabaseFilters NVARCHAR(MAX) NULL;
 
