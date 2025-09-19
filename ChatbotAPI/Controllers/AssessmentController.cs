@@ -269,6 +269,7 @@ namespace ChatbotAPI.Controllers
                     totalQuestions = assessment.TotalQuestions,
                     finalNodeId = assessment.FinalNodeId,
                     finalAction = assessment.FinalAction,
+                    answers = assessment.Answers,
                     // Include rich data
                     finalRecommendation = enrichedData.FinalRecommendation,
                     keyFindings = enrichedData.KeyFindings,

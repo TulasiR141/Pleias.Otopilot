@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import ChatBot from "react-chatbotify";
 import "../styles/PatientHomePage.css";
-import { FaUser, FaClipboardList, FaBullseye, FaClock, FaCalendarAlt, FaComments, FaEdit, FaEye, FaArrowLeft } from "react-icons/fa";
+import { FaUser, FaClipboardList, FaBullseye, FaClock, FaCalendarAlt, FaComments, FaEdit, FaEye, FaArrowLeft, FaFilter, FaTimes } from "react-icons/fa";
 
 const PatientHomePage = () => {
     // State to hold the single patient data
@@ -36,6 +36,10 @@ const PatientHomePage = () => {
     // State for hearing aid recommendations
     const [hearingAidRecommendations, setHearingAidRecommendations] = useState(null);
     const [recommendationsLoading, setRecommendationsLoading] = useState(false);
+
+    // State for filters popup
+    const [showFiltersPopup, setShowFiltersPopup] = useState(false);
+    const [filtersData, setFiltersData] = useState(null);
 
     const { patientId } = useParams();
     const navigate = useNavigate();
@@ -104,6 +108,67 @@ const PatientHomePage = () => {
         } finally {
             setRecommendationsLoading(false);
         }
+    };
+
+    // Function to extract filters data from assessment data locally
+    const extractFiltersFromAssessmentData = (assessmentData) => {
+        if (!assessmentData || !assessmentData.answers) {
+            return null;
+        }
+
+        const filtersData = assessmentData.answers
+            .filter(answer => answer.databaseFilters && answer.databaseFilters !== null)
+            .map(answer => {
+                let parsedFilters = null;
+
+                // Handle case where databaseFilters is a string (needs parsing)
+                if (typeof answer.databaseFilters === 'string') {
+                    try {
+                        parsedFilters = JSON.parse(answer.databaseFilters);
+                    } catch (e) {
+                        console.error('Failed to parse databaseFilters:', answer.databaseFilters);
+                        return null;
+                    }
+                } else {
+                    parsedFilters = answer.databaseFilters;
+                }
+
+                // Extract filters array from the parsed data
+                let filters = [];
+                if (parsedFilters && parsedFilters.filters) {
+                    filters = parsedFilters.filters;
+                } else if (Array.isArray(parsedFilters)) {
+                    filters = parsedFilters;
+                }
+
+                return {
+                    questionText: answer.questionText,
+                    answer: answer.answer,
+                    filters: filters.map(filter => ({
+                        ...filter,
+                        field: filter.field?.replaceAll('_', ' '),
+                        operator: filter.operator?.replaceAll('_', ' ')
+                    })),
+                    questionId: answer.questionId,
+                    sequenceNumber: answer.sequenceNumber
+                };
+            })
+            .filter(item => item !== null && item.filters.length > 0);
+
+        return filtersData.length > 0 ? filtersData : null;
+    };
+
+    // Function to handle View Filters button click
+    const handleViewFilters = () => {
+        const filters = extractFiltersFromAssessmentData(assessmentData);
+        setFiltersData(filters);
+        setShowFiltersPopup(true);
+    };
+
+    // Function to close filters popup
+    const closeFiltersPopup = () => {
+        setShowFiltersPopup(false);
+        setFiltersData(null);
     };
 
     // Function to fetch assessment data with recommendations
@@ -568,7 +633,9 @@ const PatientHomePage = () => {
 
             if (response.ok) {
                 const completedAssessment = await response.json();
-                setAssessmentData(completedAssessment);
+
+                // Fetch the complete assessment data with answers to ensure we have all the filter data
+                await fetchAssessmentData(patientId);
 
                 // Fetch hearing aid recommendations after completion
                 await fetchHearingAidRecommendations(patientId);
@@ -638,6 +705,80 @@ const PatientHomePage = () => {
         };
 
         return optionMap[option] || option.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    };
+
+    // Filters Popup Component
+    const FiltersPopup = () => {
+        if (!showFiltersPopup) return null;
+
+        return (
+            <div className="filters-popup-overlay">
+                <div className="filters-popup">
+                    <div className="filters-popup-header">
+                        <h3>Assessment Filters Applied</h3>
+                        <button
+                            className="close-popup-btn"
+                            onClick={closeFiltersPopup}
+                            aria-label="Close filters popup"
+                        >
+                            <FaTimes />
+                        </button>
+                    </div>
+
+                    <div className="filters-popup-content">
+                        {filtersData ? (
+                            <div className="filters-table-container">
+                                <table className="filters-table">
+                                    <thead>
+                                        <tr>
+                                            <th>Question</th>
+                                            {/*<th>Answer</th>*/}
+                                            <th>Filters</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {filtersData.map((item, index) => (
+                                            <tr key={index}>
+                                                <td className="question-cell">
+                                                    {/*<div className="question-number">Q{item.sequenceNumber || index + 1}</div>*/}
+                                                    <div className="question-text">{item.questionText}</div>
+                                                </td>
+                                                {/*<td className="answer-cell">*/}
+                                                {/*    <div className="answer-text">{item.answer}</div>*/}
+                                                {/*</td>*/}
+                                                <td className="filters-cell">
+                                                    <div className="filters-list">
+                                                        {item.filters.map((filter, filterIndex) => (
+                                                            <div key={filterIndex} className="filter-item">
+                                                                <div className="filter-detail">
+                                                                    <span className="filter-field">{filter.field}:</span>
+                                                                    <span className="filter-operation"> {filter.operator} </span>
+                                                                    <span className="filter-values">{filter.values?.join(', ')}</span>
+                                                                </div>
+                                                                {filter.reason && (
+                                                                    <div className="filter-reason">
+                                                                        <em>Reason: {filter.reason}</em>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                        ) : (
+                            <div className="no-filters-data">
+                                <p>No filters data available.</p>
+                                <p>Complete the hearing assessment to see applied filters.</p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+            </div>
+        );
     };
 
     // Component to display hearing aid recommendations
@@ -865,6 +1006,10 @@ const PatientHomePage = () => {
         setActiveTab(tab);
     };
 
+    // Check if we have assessment data with filters to show the View Filters button
+    const hasFiltersData = assessmentData && assessmentData.answers &&
+        assessmentData.answers.some(answer => answer.databaseFilters && answer.databaseFilters !== null);
+
     // Function to render content based on active tab
     const renderTabContent = () => {
         switch (activeTab) {
@@ -894,7 +1039,7 @@ const PatientHomePage = () => {
                                                     //    : `Scheduled for: ${step.date}`
                                                     `Completed on: ${step.date}`
                                                 }
-                                               
+
                                             </p>
                                         )}
                                         {step.status === "in-progress" && (
@@ -1152,10 +1297,23 @@ const PatientHomePage = () => {
             case "Hearing Aid Recommendations":
                 return (
                     <div className="journey-box">
-                        <h3>Hearing Aid Recommendations</h3>
-                        <p className="subtitle">
-                            Personalized hearing aid recommendations based on your assessment
-                        </p>
+                        <div className="recommendations-header">
+                            <div className="recommendations-title">
+                                <h3>Hearing Aid Recommendations</h3>
+                                <p className="subtitle">
+                                    Personalized hearing aid recommendations based on your assessment
+                                </p>
+                            </div>
+                            {hasFiltersData && (
+                                <button
+                                    className="view-filters-btn"
+                                    onClick={handleViewFilters}
+                                >
+                                    <FaFilter />
+                                    View Filters
+                                </button>
+                            )}
+                        </div>
                         <HearingAidRecommendations />
                     </div>
                 );
@@ -1324,6 +1482,9 @@ const PatientHomePage = () => {
 
                 {renderTabContent()}
             </div>
+
+            {/* Filters Popup */}
+            <FiltersPopup />
         </div>
     );
 };
