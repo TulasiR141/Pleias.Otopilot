@@ -732,7 +732,7 @@ const PatientHomePage = () => {
                                     <thead>
                                         <tr>
                                             <th>Question</th>
-                                            <th>Answer</th>
+                                            {/*<th>Answer</th>*/}
                                             <th>Filters</th>
                                         </tr>
                                     </thead>
@@ -740,12 +740,12 @@ const PatientHomePage = () => {
                                         {filtersData.map((item, index) => (
                                             <tr key={index}>
                                                 <td className="question-cell">
-                                                    <div className="question-number">Q{item.sequenceNumber || index + 1}</div>
+                                                    {/*<div className="question-number">Q{item.sequenceNumber || index + 1}</div>*/}
                                                     <div className="question-text">{item.questionText}</div>
                                                 </td>
-                                                <td className="answer-cell">
-                                                    <div className="answer-text">{item.answer}</div>
-                                                </td>
+                                                {/*<td className="answer-cell">*/}
+                                                {/*    <div className="answer-text">{item.answer}</div>*/}
+                                                {/*</td>*/}
                                                 <td className="filters-cell">
                                                     <div className="filters-list">
                                                         {item.filters.map((filter, filterIndex) => (
