@@ -1,0 +1,181 @@
+/* Alert.css - Custom Alert Component Styles */
+
+.custom-alert {
+    display: flex;
+    align-items: flex-start;
+    padding: 1rem;
+    border-radius: 8px;
+    border: 1px solid;
+    margin: 0.5rem 0;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    transition: all 0.3s ease;
+}
+
+.custom-alert-content {
+    display: flex;
+    align-items: flex-start;
+    width: 100%;
+    gap: 0.75rem;
+}
+
+.custom-alert-icon-wrapper {
+    flex-shrink: 0;
+    margin-top: 0.1rem;
+}
+
+.custom-alert-icon {
+    font-size: 1.1rem;
+}
+
+.custom-alert-message-wrapper {
+    flex: 1;
+    min-width: 0;
+}
+
+.custom-alert-title {
+    font-weight: 600;
+    font-size: 0.95rem;
+    margin-bottom: 0.25rem;
+    line-height: 1.4;
+}
+
+.custom-alert-message {
+    font-size: 0.9rem;
+    line-height: 1.5;
+    word-wrap: break-word;
+}
+
+.custom-alert-close-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0.25rem;
+    border-radius: 4px;
+    transition: background-color 0.2s ease;
+    flex-shrink: 0;
+    margin-top: -0.1rem;
+    margin-left: 0.5rem;
+}
+
+/* Success Alert */
+.custom-alert-success {
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+    color: #155724;
+}
+
+    .custom-alert-success .custom-alert-icon {
+        color: #28a745;
+    }
+
+    .custom-alert-success .custom-alert-close-btn:hover {
+        background-color: rgba(40, 167, 69, 0.1);
+        color: #28a745;
+    }
+
+/* Error Alert */
+.custom-alert-error {
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+    color: #721c24;
+}
+
+    .custom-alert-error .custom-alert-icon {
+        color: #dc3545;
+    }
+
+    .custom-alert-error .custom-alert-close-btn:hover {
+        background-color: rgba(220, 53, 69, 0.1);
+        color: #dc3545;
+    }
+
+/* Warning Alert */
+.custom-alert-warning {
+    background-color: #fff3cd;
+    border-color: #ffeaa7;
+    color: #856404;
+}
+
+    .custom-alert-warning .custom-alert-icon {
+        color: #ffc107;
+    }
+
+    .custom-alert-warning .custom-alert-close-btn:hover {
+        background-color: rgba(255, 193, 7, 0.1);
+        color: #ffc107;
+    }
+
+/* Info Alert */
+.custom-alert-info {
+    background-color: #d1ecf1;
+    border-color: #bee5eb;
+    color: #0c5460;
+}
+
+    .custom-alert-info .custom-alert-icon {
+        color: #17a2b8;
+    }
+
+    .custom-alert-info .custom-alert-close-btn:hover {
+        background-color: rgba(23, 162, 184, 0.1);
+        color: #17a2b8;
+    }
+
+/* Animations */
+.custom-alert {
+    animation: alertSlideIn 0.3s ease-out;
+}
+
+@keyframes alertSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .custom-alert {
+        padding: 0.75rem;
+    }
+
+    .custom-alert-content {
+        gap: 0.5rem;
+    }
+
+    .custom-alert-title {
+        font-size: 0.9rem;
+    }
+
+    .custom-alert-message {
+        font-size: 0.85rem;
+    }
+}
+
+/* Compact variant */
+.custom-alert.compact {
+    padding: 0.75rem;
+}
+
+    .custom-alert.compact .custom-alert-content {
+        gap: 0.5rem;
+    }
+
+    .custom-alert.compact .custom-alert-title {
+        font-size: 0.9rem;
+        margin-bottom: 0.15rem;
+    }
+
+    .custom-alert.compact .custom-alert-message {
+        font-size: 0.85rem;
+    }
+
+    .custom-alert.compact .custom-alert-icon {
+        font-size: 1rem;
+    }

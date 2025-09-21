@@ -4,6 +4,6 @@ namespace AudiologyChatBot.Core.Interfaces
 {
     public interface IDataImportService
     {
-        Task ImportXmlDataAsync(string xmlContent);
+        Task<ImportResultModel> ImportXmlDataAsync(string xmlContent);
     }
 }

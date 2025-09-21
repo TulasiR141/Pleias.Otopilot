@@ -1,6 +1,8 @@
 using AudiologyChatBot.Core.Interfaces;
 using AudiologyChatBot.Core.Models;
 using System.Xml.Linq;
+using System.Xml;
+using System.Diagnostics;
 
 namespace AudiologyChatBot.Infrastructure.Services
 {
@@ -13,42 +15,95 @@ namespace AudiologyChatBot.Infrastructure.Services
             _repository = repository;
         }
 
-        public async Task ImportXmlDataAsync(string xmlContent)
+        public async Task<ImportResultModel> ImportXmlDataAsync(string xmlContent)
         {
-            var xDoc = XDocument.Parse(xmlContent);
+            var stopwatch = Stopwatch.StartNew();
+            var result = new ImportResultModel();
 
-            // Define namespaces based on actual XML structure
-            XNamespace pt = "http://www.himsa.com/Measurement/PatientExport.xsd";
-
-            // Parse patients from correct structure - get the inner Patient elements
-            var patientElements = xDoc.Descendants(pt + "Patient")
-                .Where(p => p.Parent?.Name.LocalName == "Patient");
-
-            foreach (var patientElement in patientElements)
+            try
             {
-                try
+                // Basic validation
+                if (string.IsNullOrWhiteSpace(xmlContent))
+                    throw new ArgumentException("XML content cannot be empty");
+
+                var xDoc = XDocument.Parse(xmlContent);
+
+                // Define namespaces based on actual XML structure
+                XNamespace pt = "http://www.himsa.com/Measurement/PatientExport.xsd";
+
+                // Parse patients from correct structure - get the inner Patient elements
+                var patientElements = xDoc.Descendants(pt + "Patient")
+                    .Where(p => p.Parent?.Name.LocalName == "Patient");
+
+                if (!patientElements.Any())
                 {
-                    var patient = ParsePatient(patientElement, pt);
-                    await ProcessPatientAsync(patient);
+                    throw new ArgumentException("No valid patient elements found in XML file");
                 }
-                catch (Exception ex)
+
+                result.TotalRecords = patientElements.Count();
+
+                foreach (var patientElement in patientElements)
                 {
-                    // Log error but continue with other patients
-                    Console.WriteLine($"Error processing patient {patientElement.Element(pt + "FirstName")?.Value}: {ex.Message}");
-                    continue;
+                    try
+                    {
+                        var patient = ParsePatient(patientElement, pt);
+                        var wasExistingPatient = await ProcessPatientAsync(patient);
+
+                        if (wasExistingPatient)
+                            result.UpdatedPatients++;
+                        else
+                            result.NewPatients++;
+
+                        result.TotalActions += patient.Actions.Count;
+                    }
+                    catch (Exception ex)
+                    {
+                        // Log error but continue with other patients
+                        var patientName = $"{patientElement.Element(pt + "FirstName")?.Value} {patientElement.Element(pt + "LastName")?.Value}".Trim();
+                        Console.WriteLine($"Error processing patient {patientName}: {ex.Message}");
+                        result.FailedRecords++;
+                        continue;
+                    }
                 }
+
+                stopwatch.Stop();
+                result.ProcessingTimeMs = (int)stopwatch.ElapsedMilliseconds;
+
+                return result;
+            }
+            catch (Exception ex)
+            {
+                stopwatch.Stop();
+                result.ProcessingTimeMs = (int)stopwatch.ElapsedMilliseconds;
+
+                // Re-throw with more specific error information
+                if (ex is XmlException)
+                    throw new ArgumentException($"Invalid XML format: {ex.Message}", ex);
+
+                throw;
             }
         }
 
         private PatientModel ParsePatient(XElement patientElement, XNamespace pt)
         {
+            // Validate required fields
+            var guidElement = patientElement.Element(pt + "NOAHPatientGUID");
+            if (guidElement == null || string.IsNullOrWhiteSpace(guidElement.Value))
+                throw new ArgumentException("NOAHPatientGUID is required for each patient");
+
+            var firstName = (string?)patientElement.Element(pt + "FirstName");
+            var lastName = (string?)patientElement.Element(pt + "LastName");
+
+            if (string.IsNullOrWhiteSpace(firstName) && string.IsNullOrWhiteSpace(lastName))
+                throw new ArgumentException("Either FirstName or LastName is required for each patient");
+
             var patient = new PatientModel
             {
                 NOAHPatientId = (int?)patientElement.Element(pt + "NOAHPatientId") ?? 0,
-                NOAHPatientGUID = Guid.Parse((string)patientElement.Element(pt + "NOAHPatientGUID")),
+                NOAHPatientGUID = Guid.Parse(guidElement.Value),
                 NOAHPatientNumber = (string?)patientElement.Element(pt + "NOAHPatientNumber"),
-                FirstName = (string?)patientElement.Element(pt + "FirstName"),
-                LastName = (string?)patientElement.Element(pt + "LastName"),
+                FirstName = firstName,
+                LastName = lastName,
                 MiddleName = (string?)patientElement.Element(pt + "MiddleName"),
                 Gender = (string?)patientElement.Element(pt + "Gender"),
                 DateOfBirth = DateTime.TryParse((string?)patientElement.Element(pt + "DateofBirth"), out var dob) ? dob : (DateTime?)null,
@@ -266,10 +321,10 @@ namespace AudiologyChatBot.Infrastructure.Services
             }
         }
 
-        private async Task ProcessPatientAsync(PatientModel patient)
+        private async Task<bool> ProcessPatientAsync(PatientModel patient)
         {
-            // Upsert patient (this handles the delete and insert logic in repository)
-            var patientId = await _repository.UpsertPatientAsync(patient);
+            // Check if patient exists and get the result
+            var (patientId, wasExisting) = await _repository.UpsertPatientAsync(patient);
 
             // Process each action
             foreach (var action in patient.Actions)
@@ -312,6 +367,8 @@ namespace AudiologyChatBot.Infrastructure.Services
                     }
                 }
             }
+
+            return wasExisting;
         }
 
         #region Helper Methods
