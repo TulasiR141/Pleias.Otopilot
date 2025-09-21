@@ -192,4 +192,15 @@ namespace AudiologyChatBot.Core.Models
         public string? FittingNotes { get; set; }
         public DateTime CreatedDate { get; set; } = DateTime.UtcNow;
     }
+    public class ImportResultModel
+    {
+        public int NewPatients { get; set; } = 0;
+        public int UpdatedPatients { get; set; } = 0;
+        public int TotalRecords { get; set; } = 0;
+        public int TotalActions { get; set; } = 0;
+        public int FailedRecords { get; set; } = 0;
+        public int ProcessingTimeMs { get; set; } = 0;
+        public List<string> Warnings { get; set; } = new List<string>();
+        public List<string> Errors { get; set; } = new List<string>();
+    }
 }

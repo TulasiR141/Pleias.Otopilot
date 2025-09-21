@@ -43,7 +43,7 @@ namespace AudiologyChatBot.Infrastructure.Repositories
 
         #region Patient
 
-        public async Task<int> UpsertPatientAsync(PatientModel patient)
+        public async Task<(int patientId, bool wasExisting)> UpsertPatientAsync(PatientModel patient)
         {
             using var connection = new SqlConnection(_connectionString);
             await connection.OpenAsync();
@@ -57,10 +57,12 @@ namespace AudiologyChatBot.Infrastructure.Repositories
                 var existingIdObj = await checkCmd.ExecuteScalarAsync();
 
                 int patientId;
+                bool wasExisting;
 
                 if (existingIdObj != null)
                 {
                     patientId = Convert.ToInt32(existingIdObj);
+                    wasExisting = true;
 
                     // Wipe child records first
                     await DeletePatientDataAsync(patientId, connection, transaction);
@@ -98,6 +100,8 @@ namespace AudiologyChatBot.Infrastructure.Repositories
                 }
                 else
                 {
+                    wasExisting = false;
+
                     // Insert new patient with all fields
                     var insertCmd = new SqlCommand(@"
                         INSERT INTO Patients 
@@ -126,7 +130,7 @@ namespace AudiologyChatBot.Infrastructure.Repositories
                 }
 
                 transaction.Commit();
-                return patientId;
+                return (patientId, wasExisting);
             }
             catch
             {

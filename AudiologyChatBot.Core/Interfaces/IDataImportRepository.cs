@@ -4,7 +4,7 @@ namespace AudiologyChatBot.Core.Interfaces
 {
     public interface IDataImportRepository
     {
-        Task<int> UpsertPatientAsync(PatientModel patient);
+        Task<(int patientId, bool wasExisting)> UpsertPatientAsync(PatientModel patient);
         Task<int> InsertActionAsync(int patientId, PatientActionModel action);
         Task<int> InsertAudiogramAsync(int patientId, int actionId, AudiogramModel audiogram);
         Task InsertToneThresholdPointAsync(int audiogramId, ToneThresholdPointModel tonePoint);
