@@ -178,16 +178,36 @@ namespace AudiologyChatBot.Infrastructure.Repositories
 
             var cmd = new SqlCommand(@"
                 INSERT INTO Audiograms 
-                    (PatientId, ActionId, TestDate, TestType, Ear)
+                    (PatientId, ActionId, TestDate, TestType, Ear, StimulusSignalType, StimulusSignalOutput,
+                     MaskingSignalType, MaskingSignalOutput, StimulusdBWeighting, MaskingdBWeighting,
+                     StimulusPresentationType, MaskingPresentationType, StimulusTransducerType, MaskingTransducerType,
+                     HearingInstrument1Condition, HearingInstrument2Condition, SpeechThresholdType, StimulusAuxiliary)
                 OUTPUT INSERTED.Id
                 VALUES 
-                    (@PatientId, @ActionId, @TestDate, @TestType, @Ear);", connection);
+                    (@PatientId, @ActionId, @TestDate, @TestType, @Ear, @StimulusSignalType, @StimulusSignalOutput,
+                     @MaskingSignalType, @MaskingSignalOutput, @StimulusdBWeighting, @MaskingdBWeighting,
+                     @StimulusPresentationType, @MaskingPresentationType, @StimulusTransducerType, @MaskingTransducerType,
+                     @HearingInstrument1Condition, @HearingInstrument2Condition, @SpeechThresholdType, @StimulusAuxiliary);", connection);
 
             cmd.Parameters.AddWithValue("@PatientId", patientId);
             cmd.Parameters.AddWithValue("@ActionId", actionId);
             cmd.Parameters.AddWithValue("@TestDate", audiogram.TestDate);
             cmd.Parameters.AddWithValue("@TestType", DbValue(audiogram.TestType));
             cmd.Parameters.AddWithValue("@Ear", DbValue(audiogram.Ear));
+            cmd.Parameters.AddWithValue("@StimulusSignalType", DbValue(audiogram.StimulusSignalType));
+            cmd.Parameters.AddWithValue("@StimulusSignalOutput", DbValue(audiogram.StimulusSignalOutput));
+            cmd.Parameters.AddWithValue("@MaskingSignalType", DbValue(audiogram.MaskingSignalType));
+            cmd.Parameters.AddWithValue("@MaskingSignalOutput", DbValue(audiogram.MaskingSignalOutput));
+            cmd.Parameters.AddWithValue("@StimulusdBWeighting", DbValue(audiogram.StimulusdBWeighting));
+            cmd.Parameters.AddWithValue("@MaskingdBWeighting", DbValue(audiogram.MaskingdBWeighting));
+            cmd.Parameters.AddWithValue("@StimulusPresentationType", DbValue(audiogram.StimulusPresentationType));
+            cmd.Parameters.AddWithValue("@MaskingPresentationType", DbValue(audiogram.MaskingPresentationType));
+            cmd.Parameters.AddWithValue("@StimulusTransducerType", DbValue(audiogram.StimulusTransducerType));
+            cmd.Parameters.AddWithValue("@MaskingTransducerType", DbValue(audiogram.MaskingTransducerType));
+            cmd.Parameters.AddWithValue("@HearingInstrument1Condition", DbValue(audiogram.HearingInstrument1Condition));
+            cmd.Parameters.AddWithValue("@HearingInstrument2Condition", DbValue(audiogram.HearingInstrument2Condition));
+            cmd.Parameters.AddWithValue("@SpeechThresholdType", DbValue(audiogram.SpeechThresholdType));
+            cmd.Parameters.AddWithValue("@StimulusAuxiliary", DbValue(audiogram.StimulusAuxiliary));
 
             var result = await cmd.ExecuteScalarAsync();
             return Convert.ToInt32(result ?? throw new InvalidOperationException("Failed to insert audiogram"));
@@ -200,9 +220,11 @@ namespace AudiologyChatBot.Infrastructure.Repositories
 
             var cmd = new SqlCommand(@"
                 INSERT INTO ToneThresholdPoints 
-                    (AudiogramId, StimulusFrequency, StimulusLevel, MaskingFrequency, MaskingLevel, TonePointStatus)
+                    (AudiogramId, StimulusFrequency, StimulusLevel, MaskingFrequency, MaskingLevel, 
+                     TonePointStatus, AdditionalStimulusLevel, AdditionalMaskingLevel)
                 VALUES 
-                    (@AudiogramId, @StimulusFrequency, @StimulusLevel, @MaskingFrequency, @MaskingLevel, @TonePointStatus);", connection);
+                    (@AudiogramId, @StimulusFrequency, @StimulusLevel, @MaskingFrequency, @MaskingLevel, 
+                     @TonePointStatus, @AdditionalStimulusLevel, @AdditionalMaskingLevel);", connection);
 
             cmd.Parameters.AddWithValue("@AudiogramId", audiogramId);
             cmd.Parameters.AddWithValue("@StimulusFrequency", tonePoint.StimulusFrequency);
@@ -210,6 +232,8 @@ namespace AudiologyChatBot.Infrastructure.Repositories
             cmd.Parameters.AddWithValue("@MaskingFrequency", DbValue(tonePoint.MaskingFrequency));
             cmd.Parameters.AddWithValue("@MaskingLevel", DbValue(tonePoint.MaskingLevel));
             cmd.Parameters.AddWithValue("@TonePointStatus", DbValue(tonePoint.TonePointStatus));
+            cmd.Parameters.AddWithValue("@AdditionalStimulusLevel", DbValue(tonePoint.AdditionalStimulusLevel));
+            cmd.Parameters.AddWithValue("@AdditionalMaskingLevel", DbValue(tonePoint.AdditionalMaskingLevel));
 
             await cmd.ExecuteNonQueryAsync();
         }
@@ -280,16 +304,23 @@ namespace AudiologyChatBot.Infrastructure.Repositories
 
             var cmd = new SqlCommand(@"
                 INSERT INTO HearingInstruments
-                    (PatientId, ActionId, InstrumentTypeName, SerialNumber, Ear, SelectionDate)
+                    (PatientId, ActionId, InstrumentTypeName, SerialNumber, Ear, DeviceCategoryTypeCode,
+                     VentType, EarMoldForm, SoundCanalType, BatteryTypeCode, SelectionDate)
                 OUTPUT INSERTED.Id
                 VALUES
-                    (@PatientId, @ActionId, @InstrumentTypeName, @SerialNumber, @Ear, @SelectionDate);", connection);
+                    (@PatientId, @ActionId, @InstrumentTypeName, @SerialNumber, @Ear, @DeviceCategoryTypeCode,
+                     @VentType, @EarMoldForm, @SoundCanalType, @BatteryTypeCode, @SelectionDate);", connection);
 
             cmd.Parameters.AddWithValue("@PatientId", patientId);
             cmd.Parameters.AddWithValue("@ActionId", actionId);
             cmd.Parameters.AddWithValue("@InstrumentTypeName", DbValue(instrument.InstrumentTypeName));
             cmd.Parameters.AddWithValue("@SerialNumber", DbValue(instrument.SerialNumber));
             cmd.Parameters.AddWithValue("@Ear", DbValue(instrument.Ear));
+            cmd.Parameters.AddWithValue("@DeviceCategoryTypeCode", DbValue(instrument.DeviceCategoryTypeCode));
+            cmd.Parameters.AddWithValue("@VentType", DbValue(instrument.VentType));
+            cmd.Parameters.AddWithValue("@EarMoldForm", DbValue(instrument.EarMoldForm));
+            cmd.Parameters.AddWithValue("@SoundCanalType", DbValue(instrument.SoundCanalType));
+            cmd.Parameters.AddWithValue("@BatteryTypeCode", DbValue(instrument.BatteryTypeCode));
             cmd.Parameters.AddWithValue("@SelectionDate", instrument.SelectionDate);
 
             var result = await cmd.ExecuteScalarAsync();

@@ -191,25 +191,45 @@ namespace AudiologyChatBot.Infrastructure.Services
             // Parse Tone Threshold Audiograms
             foreach (var toneAudiogram in audiometricStandard.Elements(ns + "ToneThresholdAudiogram"))
             {
+                var conditions = toneAudiogram.Element(ns + "AudMeasurementConditions");
                 var audiogram = new AudiogramModel
                 {
                     TestDate = action.ActionDate,
                     TestType = "ToneThreshold",
                     Ear = DetermineEarFromConditions(toneAudiogram, ns),
                     TonePoints = new List<ToneThresholdPointModel>(),
-                    SpeechPoints = new List<SpeechDiscriminationPointModel>()
+                    SpeechPoints = new List<SpeechDiscriminationPointModel>(),
+
+                    StimulusSignalType = (string?)conditions?.Element(ns + "StimulusSignalType"),
+                    StimulusSignalOutput = (string?)conditions?.Element(ns + "StimulusSignalOutput"),
+                    MaskingSignalType = (string?)conditions?.Element(ns + "MaskingSignalType"),
+                    MaskingSignalOutput = (string?)conditions?.Element(ns + "MaskingSignalOutput"),
+                    StimulusdBWeighting = (string?)conditions?.Element(ns + "StimulusdBWeighting"),
+                    MaskingdBWeighting = (string?)conditions?.Element(ns + "MaskingdBWeighting"),
+                    StimulusPresentationType = (string?)conditions?.Element(ns + "StimulusPresentationType"),
+                    MaskingPresentationType = (string?)conditions?.Element(ns + "MaskingPresentationType"),
+                    StimulusTransducerType = (string?)conditions?.Element(ns + "StimulusTransducerType"),
+                    MaskingTransducerType = (string?)conditions?.Element(ns + "MaskingTransducerType"),
+                    HearingInstrument1Condition = (string?)conditions?.Element(ns + "HearingInstrument_1_Condition"),
+                    HearingInstrument2Condition = (string?)conditions?.Element(ns + "HearingInstrument_2_Condition"),
+                    SpeechThresholdType = (string?)conditions?.Element(ns + "SpeechThresholdType"),
+                    StimulusAuxiliary = (string?)conditions?.Element(ns + "StimulusAuxiliary")
                 };
 
                 // Parse tone points
                 foreach (var tonePoint in toneAudiogram.Elements(ns + "TonePoints"))
                 {
+                    var additionalMaskingPoint = tonePoint.Element(ns + "AdditionalMaskingPoint");
+
                     var point = new ToneThresholdPointModel
                     {
                         StimulusFrequency = (int)tonePoint.Element(ns + "StimulusFrequency"),
                         StimulusLevel = (decimal)tonePoint.Element(ns + "StimulusLevel"),
                         MaskingFrequency = (int?)tonePoint.Element(ns + "MaskingFrequency"),
                         MaskingLevel = (decimal?)tonePoint.Element(ns + "MaskingLevel"),
-                        TonePointStatus = (string?)tonePoint.Element(ns + "TonePointStatus")
+                        TonePointStatus = (string?)tonePoint.Element(ns + "TonePointStatus"),
+                        AdditionalStimulusLevel = (decimal?)additionalMaskingPoint?.Element(ns + "AdditionalStimulusLevel"),
+                        AdditionalMaskingLevel = (decimal?)additionalMaskingPoint?.Element(ns + "AdditionalMaskingLevel")
                     };
                     audiogram.TonePoints.Add(point);
                 }
@@ -220,13 +240,30 @@ namespace AudiologyChatBot.Infrastructure.Services
             // Parse Speech Discrimination Audiograms
             foreach (var speechAudiogram in audiometricStandard.Elements(ns + "SpeechDiscriminationAudiogram"))
             {
+                var conditions = speechAudiogram.Element(ns + "AudMeasurementConditions");
+
                 var audiogram = new AudiogramModel
                 {
                     TestDate = action.ActionDate,
                     TestType = "SpeechDiscrimination",
                     Ear = DetermineEarFromConditions(speechAudiogram, ns),
                     TonePoints = new List<ToneThresholdPointModel>(),
-                    SpeechPoints = new List<SpeechDiscriminationPointModel>()
+                    SpeechPoints = new List<SpeechDiscriminationPointModel>(),
+
+                    StimulusSignalType = (string?)conditions?.Element(ns + "StimulusSignalType"),
+                    StimulusSignalOutput = (string?)conditions?.Element(ns + "StimulusSignalOutput"),
+                    MaskingSignalType = (string?)conditions?.Element(ns + "MaskingSignalType"),
+                    MaskingSignalOutput = (string?)conditions?.Element(ns + "MaskingSignalOutput"),
+                    StimulusdBWeighting = (string?)conditions?.Element(ns + "StimulusdBWeighting"),
+                    MaskingdBWeighting = (string?)conditions?.Element(ns + "MaskingdBWeighting"),
+                    StimulusPresentationType = (string?)conditions?.Element(ns + "StimulusPresentationType"),
+                    MaskingPresentationType = (string?)conditions?.Element(ns + "MaskingPresentationType"),
+                    StimulusTransducerType = (string?)conditions?.Element(ns + "StimulusTransducerType"),
+                    MaskingTransducerType = (string?)conditions?.Element(ns + "MaskingTransducerType"),
+                    HearingInstrument1Condition = (string?)conditions?.Element(ns + "HearingInstrument_1_Condition"),
+                    HearingInstrument2Condition = (string?)conditions?.Element(ns + "HearingInstrument_2_Condition"),
+                    SpeechThresholdType = (string?)conditions?.Element(ns + "SpeechThresholdType"),
+                    StimulusAuxiliary = (string?)conditions?.Element(ns + "StimulusAuxiliary")
                 };
 
                 // Parse speech points
@@ -255,7 +292,13 @@ namespace AudiologyChatBot.Infrastructure.Services
                 InstrumentTypeName = (string?)instrumentSelection.Element(ns + "InstrumentTypeName"),
                 SerialNumber = (string?)instrumentSelection.Element(ns + "SerialNumber"),
                 Ear = DetermineEarFromDescription(action.Description),
-                SelectionDate = action.ActionDate
+                SelectionDate = action.ActionDate,
+
+                DeviceCategoryTypeCode = (int?)instrumentSelection.Element(ns + "DeviceCategory")?.Element(ns + "DeviceCategoryTypeCode"),
+                VentType = (int?)instrumentSelection.Element(ns + "VentType"),
+                EarMoldForm = (int?)instrumentSelection.Element(ns + "EarMoldForm"),
+                SoundCanalType = (int?)instrumentSelection.Element(ns + "SoundCanalType"),
+                BatteryTypeCode = (int?)instrumentSelection.Element(ns + "BatteryType")?.Element(ns + "BatteryTypeCode")
             };
 
             action.HearingInstruments.Add(instrument);
