@@ -127,6 +127,21 @@ namespace AudiologyChatBot.Core.Models
         public DateTime TestDate { get; set; }
         public string? TestType { get; set; }
         public string? Ear { get; set; }
+        public string? StimulusSignalType { get; set; }
+        public string? StimulusSignalOutput { get; set; }
+        public string? MaskingSignalType { get; set; }
+        public string? MaskingSignalOutput { get; set; }
+        public string? StimulusdBWeighting { get; set; }
+        public string? MaskingdBWeighting { get; set; }
+        public string? StimulusPresentationType { get; set; }
+        public string? MaskingPresentationType { get; set; }
+        public string? StimulusTransducerType { get; set; }
+        public string? MaskingTransducerType { get; set; }
+        public string? HearingInstrument1Condition { get; set; }
+        public string? HearingInstrument2Condition { get; set; }
+        public string? SpeechThresholdType { get; set; }
+        public string? StimulusAuxiliary { get; set; }
+
         public List<ToneThresholdPointModel> TonePoints { get; set; } = new();
         public List<SpeechDiscriminationPointModel> SpeechPoints { get; set; } = new();
     }
@@ -140,6 +155,8 @@ namespace AudiologyChatBot.Core.Models
         public int? MaskingFrequency { get; set; }
         public decimal? MaskingLevel { get; set; }
         public string? TonePointStatus { get; set; }
+        public decimal? AdditionalStimulusLevel { get; set; }
+        public decimal? AdditionalMaskingLevel { get; set; }
     }
 
     public class SpeechDiscriminationPointModel
@@ -161,6 +178,11 @@ namespace AudiologyChatBot.Core.Models
         public string? SerialNumber { get; set; }
         public string? Ear { get; set; }
         public DateTime SelectionDate { get; set; }
+        public int? DeviceCategoryTypeCode { get; set; }
+        public int? VentType { get; set; }
+        public int? EarMoldForm { get; set; }
+        public int? SoundCanalType { get; set; }
+        public int? BatteryTypeCode { get; set; }
     }
 
     public class TinnitusMeasurementModel
