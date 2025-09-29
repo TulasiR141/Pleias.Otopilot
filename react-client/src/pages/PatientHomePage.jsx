@@ -13,7 +13,7 @@ import TrialTab from "./tabs/TrialTab";
 import FittingFollowUpTab from "./tabs/FittingFollowUpTab";
 
 const PatientHomePage = () => {
-    // State to hold the single patient data
+    // State to hold the single patient data (basic info)
     const [patient, setPatient] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -42,6 +42,32 @@ const PatientHomePage = () => {
         navigate('/');
     };
 
+    // Function to fetch patient details (basic info only)
+    const fetchPatientDetails = async () => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            // Fetch basic patient info (without test data) for main display
+            const response = await fetch(`${import.meta.env.VITE_API_URL}/patient/${patientId}?allTestData=false`);
+
+            if (!response.ok) {
+                if (response.status === 404) {
+                    throw new Error("Patient not found");
+                }
+                throw new Error("Failed to fetch patient details");
+            }
+
+            const data = await response.json();
+            setPatient(data);
+
+        } catch (err) {
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     useEffect(() => {
         const getPatientDetails = async () => {
             if (!patientId) {
@@ -51,23 +77,10 @@ const PatientHomePage = () => {
             }
 
             try {
-                const response = await fetch(`${import.meta.env.VITE_API_URL}/patient/${patientId}`);
-
-                if (!response.ok) {
-                    if (response.status === 404) {
-                        throw new Error("Patient not found.");
-                    }
-                    throw new Error("Failed to fetch patient data");
-                }
-
-                const data = await response.json();
-                setPatient(data);
-
+                await fetchPatientDetails();
                 await fetchAssessmentData(patientId);
             } catch (err) {
                 setError(err.message);
-            } finally {
-                setLoading(false);
             }
         };
 
@@ -160,12 +173,6 @@ const PatientHomePage = () => {
         "Fitting Follow Up"
     ];
 
-    // Function to clear assessment data (for restart functionality)
-    const clearAssessmentData = () => {
-        setAssessmentData(null);
-        setHearingAidRecommendations(null);
-    };
-
     // Function to restart assessment - moved back to main component
     const handleRestartAssessment = () => {
         // Clear assessment data
@@ -187,7 +194,7 @@ const PatientHomePage = () => {
             fetchHearingAidRecommendations,
             handleViewRecommendations,
             setActiveTab,
-            handleRestartAssessment  // Pass the restart handler
+            handleRestartAssessment
         };
 
         switch (activeTab) {
