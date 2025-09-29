@@ -25,20 +25,61 @@ namespace ChatbotAPI.Controllers
         }
 
         [HttpGet("{patientId}")]
-        public async Task<IActionResult> GetPatientDetails(int patientId)
+        public async Task<IActionResult> GetPatientDetails(int patientId, [FromQuery] bool allTestData = false)
         {
             try
             {
-                var patient = await _repository.GetPatientByIdAsync(patientId);
+                if (patientId <= 0)
+                {
+                    return BadRequest("Patient ID must be a positive integer");
+                }
+
+                var patient = await _repository.GetPatientByIdAsync(patientId, allTestData);
+
                 if (patient == null)
                 {
-                    return NotFound($"Patient with ID {patientId} not found");
+                    return NotFound(new
+                    {
+                        Message = $"Patient with ID {patientId} not found",
+                        PatientId = patientId
+                    });
                 }
-                return Ok(patient);
+
+                return Ok(new
+                {
+                    Success = true,
+                    Data = patient,
+                    IncludesAllTestData = allTestData
+                });
+            }
+            catch (ArgumentException ex)
+            {
+                // Handle validation errors
+                return BadRequest(new
+                {
+                    Message = "Invalid request",
+                    Error = ex.Message
+                });
+            }
+            catch (InvalidOperationException ex)
+            {
+                // Handle business logic errors
+                return BadRequest(new
+                {
+                    Message = "Operation not valid",
+                    Error = ex.Message
+                });
             }
             catch (Exception ex)
             {
-                return StatusCode(500, $"Internal server error: {ex.Message}");
+                // Log the full exception details but don't expose them to the client
+                // _logger.LogError(ex, "Error retrieving patient {PatientId}", patientId);
+
+                return StatusCode(500, new
+                {
+                    Message = "An error occurred while retrieving patient data",
+                    PatientId = patientId
+                });
             }
         }
 
